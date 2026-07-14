@@ -13,8 +13,8 @@
           class="nav-item"
           :class="{ active: $route.path === route.path }"
         >
-          <span class="nav-icon">{{ route.meta.icon }}</span>
-          <span v-show="!sidebarCollapsed" class="nav-label">{{ route.meta.title }}</span>
+          <span class="nav-icon">{{ route.meta?.icon }}</span>
+          <span v-show="!sidebarCollapsed" class="nav-label">{{ route.meta?.title }}</span>
         </router-link>
       </nav>
       <div class="sidebar-footer">
