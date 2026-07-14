@@ -11,12 +11,14 @@
     <div class="results" v-if="results.length > 0">
       <div v-for="r in results" :key="r.torrent_url" class="result-item">
         <div class="result-info">
-          <div class="result-title">{{ r.title }}</div>
+          <div class="result-title">{{ r.title_cn || r.title }}</div>
           <div class="result-meta">
             <span class="site-badge">{{ r.site }}</span>
             <span v-if="r.size" class="size">{{ r.size }}</span>
             <span class="seeders">🟢 {{ r.seeders }}</span>
+            <span v-if="r.title_cn" class="original-tip" title="原标题">🔤</span>
           </div>
+          <div v-if="r.title_cn" class="original-title">{{ r.title }}</div>
         </div>
         <div class="result-actions">
           <button class="btn btn-sm btn-primary" @click="download(r)">下载</button>

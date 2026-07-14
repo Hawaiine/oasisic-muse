@@ -84,16 +84,107 @@
         <div class="value">{{ info.proxy_url || '未配置' }}</div>
       </div>
     </div>
+
+    <!-- 安全限制 -->
+    <div class="section">
+      <h3>🛡️ 安全限制</h3>
+      <p class="section-desc">控制订阅引擎的下载行为，防止 PT 账号被警告和硬盘爆炸</p>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>每日下载上限</label>
+          <span class="limit-value">{{ limits.max_daily_downloads }} 个</span>
+        </div>
+        <input type="range" min="1" max="50" v-model.number="limits.max_daily_downloads" class="slider" />
+        <span class="limit-desc">到上限自动停，次日重置</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>最大并发下载</label>
+          <span class="limit-value">{{ limits.max_concurrent_downloads }} 个</span>
+        </div>
+        <input type="range" min="1" max="10" v-model.number="limits.max_concurrent_downloads" class="slider" />
+        <span class="limit-desc">同时下载的任务数</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>磁盘剩余阈值</label>
+          <span class="limit-value">{{ limits.disk_threshold_gb }} GB</span>
+        </div>
+        <input type="range" min="5" max="200" step="5" v-model.number="limits.disk_threshold_gb" class="slider" />
+        <span class="limit-desc">低于此值自动暂停下载</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>最小文件大小</label>
+          <span class="limit-value">{{ limits.min_size_gb }} GB</span>
+        </div>
+        <input type="range" min="0.1" max="5" step="0.1" v-model.number="limits.min_size_gb" class="slider" />
+        <span class="limit-desc">小于此值的文件跳过</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>最大文件大小</label>
+          <span class="limit-value">{{ limits.max_size_gb }} GB</span>
+        </div>
+        <input type="range" min="5" max="100" step="5" v-model.number="limits.max_size_gb" class="slider" />
+        <span class="limit-desc">大于此值的文件跳过</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>最少做种数</label>
+          <span class="limit-value">{{ limits.min_seeders }} 个</span>
+        </div>
+        <input type="range" min="0" max="20" v-model.number="limits.min_seeders" class="slider" />
+        <span class="limit-desc">做种数低于此值的不下载</span>
+      </div>
+
+      <div class="limit-item">
+        <div class="limit-header">
+          <label>订阅引擎</label>
+          <span class="limit-value">{{ limits.enabled ? '🟢 运行中' : '🔴 已暂停' }}</span>
+        </div>
+        <div class="toggle-row">
+          <button class="btn btn-sm" :class="limits.enabled ? 'btn-green' : 'btn-gray'" @click="toggleEngine">
+            {{ limits.enabled ? '暂停引擎' : '启动引擎' }}
+          </button>
+          <button class="btn btn-sm btn-primary" @click="runNow">立即执行一次</button>
+        </div>
+      </div>
+
+      <div class="limit-status">
+        <span>今日已下载: <strong>{{ limits.today_downloaded }}</strong> / {{ limits.max_daily_downloads }}</span>
+        <span>活跃下载: <strong>{{ limits.active_downloads }}</strong> / {{ limits.max_concurrent_downloads }}</span>
+      </div>
+
+      <button class="btn btn-primary" @click="saveLimits" style="margin-top:16px">保存安全限制</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { getSettings, savePTSites as savePTSitesApi, testNotify as testNotifyApi, getPTSitesConfig } from '../api'
+import { getSettings, savePTSites as savePTSitesApi, testNotify as testNotifyApi, getPTSitesConfig, getLimits, updateLimits, runEngineNow } from '../api'
 
 const info = ref<any>({})
 const ptSites = ref<any[]>([])
 const siteForms = reactive<Record<string, { cookie: string; passkey: string }>>({})
+const limits = ref<any>({
+  max_daily_downloads: 10,
+  max_concurrent_downloads: 3,
+  disk_threshold_gb: 50,
+  min_size_gb: 0.5,
+  max_size_gb: 20,
+  min_seeders: 1,
+  enabled: true,
+  today_downloaded: 0,
+  active_downloads: 0,
+})
 
 async function savePTSites() {
   const sites: Record<string, { cookie?: string; passkey?: string }> = {}

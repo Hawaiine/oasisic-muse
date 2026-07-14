@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .database import init_db
-from .routers import about, subscribe, download, library, settings as settings_router, notify, search, limits
+from .routers import about, subscribe, download, library, settings as settings_router, notify, search, limits, health
 from .services.subscribe_engine import SubscribeEngine
 
 logging.basicConfig(
@@ -64,6 +64,7 @@ app.include_router(settings_router.router, prefix="/api", tags=["设置"])
 app.include_router(notify.router, prefix="/api", tags=["通知"])
 app.include_router(search.router, prefix="/api", tags=["搜索"])
 app.include_router(limits.router, prefix="/api", tags=["安全限制"])
+app.include_router(health.router, prefix="/api", tags=["连通性检测"])
 
 
 # 静态文件
