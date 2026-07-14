@@ -26,8 +26,8 @@
               <n-card :bordered="false" embedded>
                 <n-text strong style="font-size: 13px;">{{ site.name }}</n-text>
                 <n-space vertical style="margin-top: 8px;">
-                  <n-input v-model:value="(forms.pt as any)[site.short]?.cookie" placeholder="Cookie" size="small" />
-                  <n-input v-if="site.auth_type.includes('passkey')" v-model:value="(forms.pt as any)[site.short]?.passkey" placeholder="Passkey" size="small" />
+                  <n-input v-model:value="getPtValue(site.short, 'cookie')" placeholder="Cookie" size="small" />
+                  <n-input v-if="site.auth_type.includes('passkey')" v-model:value="getPtValue(site.short, 'passkey')" placeholder="Passkey" size="small" />
                 </n-space>
               </n-card>
             </n-grid-item>
@@ -191,6 +191,10 @@ const forms = reactive({
     max_seeds: 10,
   },
 })
+
+function getPtValue(short: string, field: string) {
+  return (forms.pt as any)[short]?.[field] ?? ''
+}
 
 async function load() {
   try {
