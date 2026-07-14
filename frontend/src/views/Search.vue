@@ -1,101 +1,100 @@
 <template>
   <div class="search-page">
-    <h1 class="page-title">🔍 搜索</h1>
-    <div class="search-bar">
-      <input v-model="keyword" placeholder="番号 / 演员名 / 关键词" class="input" @keyup.enter="doSearch" />
-      <input v-model="actor" placeholder="演员（可选过滤）" class="input" />
-      <button class="btn btn-primary" @click="doSearch" :disabled="loading">
-        {{ loading ? '搜索中...' : '搜索' }}
-      </button>
-    </div>
+    <n-page-header title="搜索" subtitle="PT 站点资源搜索">
+      <template #extra>
+        <n-button @click="loadSites">刷新站点</n-button>
+      </template>
+    </n-page-header>
 
-    <div class="results" v-if="results.length > 0">
-      <div v-for="r in results" :key="r.torrent_url" class="result-card">
-        <div class="card-cover">
-          <img v-if="r.cover" :src="r.cover" :alt="r.title" @error="r.cover = ''" />
-          <div v-else class="cover-placeholder">🎬</div>
-        </div>
-        <div class="card-body">
-          <div class="card-title">{{ r.title_cn || r.title }}</div>
-          <div class="card-original" v-if="r.title_cn">{{ r.title }}</div>
-          <div class="card-meta">
-            <span class="site-badge">{{ r.site }}</span>
-            <span v-if="r.size" class="meta-item">{{ r.size }}</span>
-            <span class="meta-item">🟢 {{ r.seeders }}</span>
-            <span v-if="r.movie_id" class="meta-item">#{{ r.movie_id }}</span>
-          </div>
-          <div class="card-actors" v-if="r.actors && r.actors.length">
-            {{ r.actors.slice(0, 3).join(' / ') }}
-          </div>
-          <button class="btn btn-sm btn-primary" @click="download(r)" v-if="r.torrent_url">
-            ⬇️ 下载种子
-          </button>
-        </div>
-      </div>
-    </div>
+    <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+      <n-form inline :model="searchForm" @submit.prevent="doSearch">
+        <n-form-item label="番号">
+          <n-input v-model:value="searchForm.keyword" placeholder="番号 / 演员名 / 关键词" @keyup.enter="doSearch" style="width: 240px;" />
+        </n-form-item>
+        <n-form-item label="演员">
+          <n-input v-model:value="searchForm.actor" placeholder="可选过滤" style="width: 160px;" />
+        </n-form-item>
+        <n-form-item>
+          <n-button type="primary" html-type="submit" :loading="loading">
+            {{ loading ? '搜索中...' : '搜索' }}
+          </n-button>
+        </n-form-item>
+      </n-form>
+    </n-card>
 
-    <div v-else-if="searched" class="empty">
-      <p>未找到结果</p>
-      <p class="hint">试试其他关键词，或者检查 PT 站点 Cookie 是否已配置</p>
-    </div>
+    <n-alert v-if="errorMsg" type="error" :show-icon="false" style="margin-bottom: 16px;">
+      {{ errorMsg }}
+    </n-alert>
+
+    <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen">
+      <n-grid-item v-for="r in results" :key="r.torrent_url">
+        <n-card :bordered="false" embedded>
+          <n-space vertical>
+            <n-image v-if="r.cover" :src="r.cover" :fallback-src="''" object-fit="cover" style="width: 100%; height: 180px; border-radius: 8px;" />
+            <div v-else style="width: 100%; height: 180px; background: #1a202c; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🎬</div>
+            <n-text strong>{{ r.title_cn || r.title }}</n-text>
+            <n-text depth="3" v-if="r.title_cn">{{ r.title }}</n-text>
+            <n-space>
+              <n-tag size="small" round>{{ r.site }}</n-tag>
+              <n-tag v-if="r.size" size="small" round>{{ r.size }}</n-tag>
+              <n-tag size="small" round type="success">🟢 {{ r.seeders }}</n-tag>
+            </n-space>
+            <n-text depth="3" v-if="r.actors && r.actors.length">
+              {{ r.actors.slice(0, 3).join(' / ') }}
+            </n-text>
+            <n-button block size="small" type="primary" @click="download(r)" v-if="r.torrent_url">
+              ⬇️ 下载
+            </n-button>
+          </n-space>
+        </n-card>
+      </n-grid-item>
+    </n-grid>
+
+    <n-empty v-if="results.length === 0 && !loading && !errorMsg" description="输入番号搜索资源" style="margin-top: 40px;" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { searchPT } from '../api'
+import { ref, onMounted } from 'vue'
+import { searchTorrents, downloadTorrent, getPTSites } from '../api'
 
-const keyword = ref('')
-const actor = ref('')
+const searchForm = ref({ keyword: '', actor: '' })
 const results = ref<any[]>([])
 const loading = ref(false)
-const searched = ref(false)
+const errorMsg = ref('')
+const sites = ref<any[]>([])
+
+async function loadSites() {
+  try {
+    sites.value = await getPTSites()
+  } catch {}
+}
 
 async function doSearch() {
-  if (!keyword.value.trim()) return
+  if (!searchForm.value.keyword.trim()) return
   loading.value = true
-  searched.value = true
+  errorMsg.value = ''
   try {
-    const res = await searchPT(keyword.value.trim(), actor.value.trim())
-    results.value = (res as any).items || []
-  } catch {
-    results.value = []
+    results.value = await searchTorrents({
+      keyword: searchForm.value.keyword,
+      actor: searchForm.value.actor,
+    })
+  } catch (e: any) {
+    errorMsg.value = e.message || '搜索失败'
   } finally {
     loading.value = false
   }
 }
 
-function download(r: any) {
-  if (r.torrent_url) {
-    window.open(r.torrent_url, '_blank')
-  }
+async function download(r: any) {
+  try {
+    await downloadTorrent(r.torrent_url, r.save_path)
+  } catch {}
 }
+
+onMounted(loadSites)
 </script>
 
 <style scoped>
-.search-page { max-width: 800px; }
-.page-title { font-size: 24px; margin-bottom: 20px; color: #e1e8ed; }
-.search-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-.input { flex: 1; min-width: 150px; padding: 10px 14px; border-radius: 8px; border: 1px solid #2a3040; background: #1a1f2e; color: #e1e8ed; font-size: 14px; }
-.input::placeholder { color: #556; }
-.btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; }
-.btn-primary { background: #1d9bf0; color: #fff; }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.results { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.result-card { display: flex; gap: 16px; padding: 16px; background: #1a1f2e; border-radius: 12px; }
-.card-cover { width: 100px; min-height: 140px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: #0f1419; }
-.card-cover img { width: 100%; height: 100%; object-fit: cover; }
-.cover-placeholder { width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; font-size: 32px; opacity: 0.3; }
-.card-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.card-title { font-size: 15px; font-weight: 600; color: #e1e8ed; line-height: 1.4; }
-.card-original { font-size: 12px; color: #556; }
-.card-meta { display: flex; gap: 10px; font-size: 12px; color: #8899a6; flex-wrap: wrap; }
-.site-badge { padding: 2px 6px; border-radius: 4px; background: #2a3040; font-size: 11px; }
-.meta-item { display: flex; align-items: center; gap: 2px; }
-.card-actors { font-size: 12px; color: #1d9bf0; }
-.empty { text-align: center; padding: 60px 20px; }
-.empty p { font-size: 16px; color: #8899a6; }
-.hint { font-size: 12px; color: #556; margin-top: 8px; }
+.search-page { max-width: 960px; }
 </style>
