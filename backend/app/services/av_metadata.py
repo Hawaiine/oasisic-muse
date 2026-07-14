@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 
+from ..config import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,20 +20,24 @@ class AVMetadataService:
     通过番号从多个数据源刮削封面、演员、标题等信息
     """
 
-    def __init__(self):
+    def __init__(self, proxy_url: str = ""):
         self._cover_cache: dict[str, str] = {}
+        self._proxy_url = proxy_url or settings.proxy_url
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """创建 HTTP 客户端（自动配置代理）"""
+        kwargs: dict[str, Any] = {"timeout": 10, "follow_redirects": True}
+        if self._proxy_url:
+            kwargs["proxies"] = self._proxy_url
+            logger.debug("刮削使用代理: %s", self._proxy_url)
+        return httpx.AsyncClient(**kwargs)
 
     async def lookup(self, movie_id: str) -> dict[str, Any] | None:
-        """根据番号查询元数据
-
-        Args:
-            movie_id: 番号，如 ABC-123
-        """
+        """根据番号查询元数据"""
         movie_id = movie_id.upper().replace("_", "-").strip()
         if not movie_id:
             return None
 
-        # 尝试多个数据源
         sources = [
             ("JavDB", self._lookup_javdb),
             ("JavLibrary", self._lookup_javlibrary),
@@ -53,7 +59,7 @@ class AVMetadataService:
         """从标题中提取番号并刮削元数据"""
         ids = self._extract_ids(title)
         results = []
-        for mid in ids[:3]:  # 最多查3个
+        for mid in ids[:3]:
             meta = await self.lookup(mid)
             if meta:
                 results.append(meta)
@@ -82,15 +88,12 @@ class AVMetadataService:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Accept": "text/html,application/xhtml+xml",
         }
-
         try:
-            async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            async with self._get_client() as client:
                 resp = await client.get(url, headers=headers)
                 resp.raise_for_status()
-
                 soup = BeautifulSoup(resp.text, "html.parser")
 
-                # 封面
                 cover_img = soup.select_one(".movie-cover img, .cover img, img.cover")
                 cover_url = ""
                 if cover_img:
@@ -98,11 +101,9 @@ class AVMetadataService:
                     if src and not src.startswith("data:"):
                         cover_url = src
 
-                # 标题
                 title_el = soup.select_one(".title, .movie-title, h2 strong")
                 title = title_el.get_text(strip=True) if title_el else ""
 
-                # 演员
                 actors = []
                 actor_els = soup.select(".actors a, .cast a")
                 for a in actor_els:
@@ -129,13 +130,12 @@ class AVMetadataService:
             "User-Agent": "Mozilla/5.0",
             "Accept": "text/html,application/xhtml+xml",
         }
-
         try:
-            async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            async with self._get_client() as client:
                 resp = await client.get(url, headers=headers)
                 resp.raise_for_status()
-
                 soup = BeautifulSoup(resp.text, "html.parser")
+
                 video = soup.select_one(".videothumblist .video, .searchresult .video")
                 if not video:
                     return None
