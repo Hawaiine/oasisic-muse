@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { create } from 'naive-ui'
 import App from './App.vue'
 import Dashboard from './views/Dashboard.vue'
 import Subscribe from './views/Subscribe.vue'
@@ -27,4 +28,9 @@ const router = createRouter({
 
 const app = createApp(App)
 app.use(router)
+
+// Naive UI 安装
+const naive = create()
+app.use(naive)
+
 app.mount('#app')
