@@ -60,7 +60,7 @@ const items = ref<any[]>([])
 
 async function refreshLibrary(source: string) {
   try {
-    await api.post(`/api/library/refresh?source=${source}`)
+    await api('/api/library/refresh', { method: 'POST', params: { source } })
   } catch (e) {
     console.error(e)
   }
@@ -68,9 +68,9 @@ async function refreshLibrary(source: string) {
 
 onMounted(async () => {
   try {
-    const res = await api.get('/api/settings')
-    jellyfinConfig.value = res.data.media?.jellyfin
-    embyConfig.value = res.data.media?.emby
+    const res = await api('/api/settings')
+    jellyfinConfig.value = res.media?.jellyfin
+    embyConfig.value = res.media?.emby
   } catch {
     // ignore
   }

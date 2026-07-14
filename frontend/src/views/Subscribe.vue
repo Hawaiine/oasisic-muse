@@ -66,8 +66,8 @@ const tasks = ref<Task[]>([])
 
 async function load() {
   try {
-    const res = await api.get('/api/subscriptions')
-    tasks.value = res.data || []
+    const res = await api('/api/subscriptions')
+    tasks.value = res || []
   } catch (e) {
     tasks.value = []
   }
@@ -84,7 +84,7 @@ function toggleTask(t: Task) {
 
 async function deleteTask(id: string) {
   try {
-    await api.delete(`/api/subscriptions/${id}`)
+    await api(`/api/subscriptions/${id}`, { method: 'DELETE' })
     load()
   } catch (e) {
     console.error(e)

@@ -177,10 +177,10 @@ function setPtValue(short: string, field: string, value: string) {
 async function handleSave() {
   saving.value = true
   try {
-    await api.post('/api/settings', forms)
+    await api('/api/settings', { method: 'POST', body: forms })
     message.success('配置已保存')
   } catch (err: any) {
-    message.error(err.response?.data?.detail || '保存失败')
+    message.error((err as Error).message || '保存失败')
   } finally {
     saving.value = false
   }
@@ -188,8 +188,8 @@ async function handleSave() {
 
 async function load() {
   try {
-    const res = await api.get('/api/settings')
-    const data = res.data
+    const res = await api('/api/settings')
+    const data = res
     if (data.downloader?.qbittorrent) Object.assign(forms.downloader.qbittorrent, data.downloader.qbittorrent)
     if (data.media) {
       if (data.media.jellyfin) Object.assign(forms.media.jellyfin, data.media.jellyfin)

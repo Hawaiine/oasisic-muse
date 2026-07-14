@@ -104,7 +104,6 @@ const themeOverrides = {
     bodyColor: '#171717',
     tagColor: '#2e2e2e',
     hoverColor: '#262626',
-    borderColor: '#2e2e2e',
   },
 }
 

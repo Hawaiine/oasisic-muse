@@ -117,8 +117,8 @@ const downloads = ref<DownloadItem[]>([])
 
 async function load() {
   try {
-    const health = await api.get('/api/health')
-    stats.value.connected = health.data.status === 'ok'
+    const health = await api('/api/health')
+    stats.value.connected = health.status === 'ok'
   } catch {
     stats.value.connected = false
   }
@@ -127,8 +127,8 @@ async function load() {
 
 async function loadDownloads() {
   try {
-    const res = await api.get('/api/downloads')
-    downloads.value = (res.data || []).map((d: any) => ({
+    const res = await api('/api/downloads')
+    downloads.value = (res || []).map((d: any) => ({
       hash: d.hash,
       name: d.name || '未知',
       size: d.size || '0 B',

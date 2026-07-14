@@ -71,8 +71,8 @@ const siteOptions = ref<any[]>([])
 
 async function loadSites() {
   try {
-    const res = await api.get('/api/sites')
-    siteOptions.value = (res.data || []).map((s: any) => ({
+    const res = await api('/api/sites')
+    siteOptions.value = (res || []).map((s: any) => ({
       label: s.name,
       value: s.short,
     }))
@@ -86,8 +86,8 @@ async function doSearch() {
   try {
     const params: any = { q: keyword.value }
     if (selectedSite.value) params.site = selectedSite.value
-    const res = await api.get('/api/search', { params })
-    results.value = res.data || []
+    const res = await api('/api/search', { params })
+    results.value = res || []
   } catch (e) {
     console.error(e)
     results.value = []
@@ -96,7 +96,7 @@ async function doSearch() {
 
 async function downloadTorrent(item: any) {
   try {
-    await api.post('/api/download', { url: item.download_url })
+    await api('/api/download', { url: item.download_url })
   } catch (e) {
     console.error(e)
   }

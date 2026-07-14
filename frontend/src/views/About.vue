@@ -34,8 +34,8 @@ const info = ref<any>({})
 
 onMounted(async () => {
   try {
-    const res = await api.get('/api/about')
-    info.value = res.data || {}
+    const res = await api('/api/about')
+    info.value = res || {}
   } catch {
     // ignore
   }

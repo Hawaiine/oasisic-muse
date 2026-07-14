@@ -64,8 +64,8 @@ const downloads = ref<DownloadItem[]>([])
 
 async function load() {
   try {
-    const res = await api.get('/api/downloads')
-    downloads.value = (res.data || []).map((d: any) => ({
+    const res = await api('/api/downloads')
+    downloads.value = (res || []).map((d: any) => ({
       hash: d.hash,
       name: d.name || '未知',
       size: d.size || '0 B',
