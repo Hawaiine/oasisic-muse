@@ -13,6 +13,10 @@ export async function getSettings() {
   return api('/settings')
 }
 
+export async function saveAllSettings(config: Record<string, string>) {
+  return api('/settings/all', { method: 'POST', body: config })
+}
+
 export async function getPTSitesConfig() {
   return api('/settings/pt-sites')
 }
@@ -89,4 +93,8 @@ export async function runEngineNow() {
 
 export async function lookupMovie(movieId: string) {
   return api('/search/lookup', { params: { movie_id: movieId } })
+}
+
+export async function checkConnectivity() {
+  return api('/health/connectivity')
 }
