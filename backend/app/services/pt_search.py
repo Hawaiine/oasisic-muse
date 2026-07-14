@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .base import TorrentResult
-from .mteam import MTeamAdapter
-from .nexusphp import create_nicept, create_pttime, create_rousi
+from .pt_sites.base import TorrentResult
+from .pt_sites.mteam import MTeamAdapter
+from .pt_sites.nexusphp import create_nicept, create_pttime, create_rousi
 
 logger = logging.getLogger(__name__)
 
