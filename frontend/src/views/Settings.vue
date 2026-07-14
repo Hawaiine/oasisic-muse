@@ -210,13 +210,39 @@ async function testNotify() {
   alert('测试通知已发送，请检查 Telegram / Discord')
 }
 
+async function saveLimits() {
+  const l = limits.value
+  await updateLimits({
+    max_daily_downloads: l.max_daily_downloads,
+    max_concurrent_downloads: l.max_concurrent_downloads,
+    disk_threshold_gb: l.disk_threshold_gb,
+    min_size_gb: l.min_size_gb,
+    max_size_gb: l.max_size_gb,
+    min_seeders: l.min_seeders,
+    enabled: l.enabled,
+  })
+  alert('✅ 安全限制已保存')
+}
+
+async function toggleEngine() {
+  limits.value.enabled = !limits.value.enabled
+  await saveLimits()
+}
+
+async function runNow() {
+  await runEngineNow()
+  alert('⚡ 已触发订阅引擎执行')
+}
+
 async function load() {
-  const [s, pt] = await Promise.all([
+  const [s, pt, l] = await Promise.all([
     getSettings(),
     getPTSitesConfig().catch(() => ({})),
+    getLimits().catch(() => ({})),
   ])
   info.value = s as any
   ptSites.value = (s as any).pt_sites || []
+  Object.assign(limits.value, l as any)
 
   for (const site of ptSites.value) {
     if (!siteForms[site.short]) {
@@ -254,4 +280,20 @@ onMounted(load)
 .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; }
 .btn-primary { background: #1d9bf0; color: #fff; }
 .btn-sm { padding: 8px 16px; font-size: 13px; margin-top: 10px; }
+.btn-green { background: #00ba7c; color: #fff; }
+.btn-gray { background: #2a3040; color: #8899a6; }
+
+/* 安全限制样式 */
+.limit-item { background: #0f1419; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.limit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.limit-header label { font-size: 14px; color: #e1e8ed; }
+.limit-value { font-size: 16px; font-weight: 600; color: #1d9bf0; }
+.limit-desc { font-size: 11px; color: #556; display: block; margin-top: 4px; }
+.slider { width: 100%; height: 6px; appearance: none; background: #2a3040; border-radius: 3px; outline: none; }
+.slider::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #1d9bf0; cursor: pointer; }
+.toggle-row { display: flex; gap: 8px; }
+.limit-status { display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: #8899a6; }
+.limit-status strong { color: #e1e8ed; }
+.original-title { font-size: 11px; color: #556; margin-top: 2px; }
+.original-tip { cursor: help; }
 </style>
