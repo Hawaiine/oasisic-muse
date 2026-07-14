@@ -13,6 +13,22 @@ export async function getSettings() {
   return api('/settings')
 }
 
+export async function getPTSitesConfig() {
+  return api('/settings/pt-sites')
+}
+
+export async function savePTSites(sites: Record<string, { cookie?: string; passkey?: string }>) {
+  return api('/settings/pt-sites', { method: 'POST', body: { sites } })
+}
+
+export async function getLimits() {
+  return api('/limits')
+}
+
+export async function updateLimits(params: Record<string, any>) {
+  return api('/limits', { method: 'POST', params })
+}
+
 export async function getSubscribes() {
   return api('/subscribes')
 }
@@ -65,4 +81,8 @@ export async function getRecentMedia(limit = 10) {
 
 export async function refreshLibrary() {
   return api('/library/refresh', { method: 'POST' })
+}
+
+export async function runEngineNow() {
+  return api('/limits/run-now', { method: 'POST' })
 }
