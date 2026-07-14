@@ -3,45 +3,38 @@
     <n-message-provider>
       <n-notification-provider>
         <div class="app-layout">
-          <n-layout has-sider class="app-container">
-            <n-layout-sider
-              :collapsed-width="60"
-              :width="220"
+          <div class="sidebar">
+            <div class="logo">
+              <svg class="logo-svg" viewBox="0 0 32 32" width="28" height="28">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                <path d="M10 18 Q16 8 22 18" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="16" cy="12" r="3" fill="#1d9bf0"/>
+              </svg>
+              <span v-if="!sidebarCollapsed" class="logo-text">Muse</span>
+            </div>
+
+            <n-menu
+              :options="menuOptions"
+              :value="currentRoute"
+              @update:value="handleMenuSelect"
               :collapsed="sidebarCollapsed"
-              show-trigger
-              collapse-mode="width"
-              bordered
-              class="sidebar"
-            >
-              <div class="logo">
-                <svg class="logo-svg" viewBox="0 0 32 32" width="28" height="28">
-                  <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-                  <path d="M10 18 Q16 8 22 18" fill="none" stroke="#1d9bf0" stroke-width="2.5" stroke-linecap="round"/>
-                  <circle cx="16" cy="12" r="3" fill="#1d9bf0"/>
-                </svg>
-                <span v-if="!sidebarCollapsed" class="logo-text">Muse</span>
-              </div>
+              :collapsed-width="60"
+              :collapsed-icon-size="20"
+            />
 
-              <n-menu
-                :options="menuOptions"
-                :value="currentRoute"
-                @update:value="handleMenuSelect"
-              />
+            <div class="sidebar-footer">
+              <n-tag :bordered="false" size="small" round :type="online ? 'success' : 'error'">
+                {{ online ? '在线' : '离线' }}
+              </n-tag>
+              <n-button quaternary circle size="tiny" @click="sidebarCollapsed = !sidebarCollapsed">
+                ◀
+              </n-button>
+            </div>
+          </div>
 
-              <div class="sidebar-footer">
-                <n-tag :bordered="false" size="small" round :type="online ? 'success' : 'error'">
-                  {{ online ? '在线' : '离线' }}
-                </n-tag>
-                <n-button quaternary circle size="tiny" @click="sidebarCollapsed = !sidebarCollapsed">
-                  ◀
-                </n-button>
-              </div>
-            </n-layout-sider>
-
-            <n-layout-content class="main-content" content-style="padding: 32px; max-width: 960px;">
-              <router-view />
-            </n-layout-content>
-          </n-layout>
+          <div class="main-content">
+            <router-view />
+          </div>
         </div>
       </n-notification-provider>
     </n-message-provider>
@@ -109,23 +102,27 @@ body {
 
 /* ========== 布局 ========== */
 .app-layout {
-  min-height: 100vh;
-}
-
-.app-container {
+  display: flex;
   min-height: 100vh;
 }
 
 /* ========== 侧栏 ========== */
 .sidebar {
-  background: #0d1117 !important;
-  border-right: 1px solid #1e2533 !important;
-}
-
-.sidebar .n-layout-scroll-container {
+  width: 220px;
+  background: #0d1117;
+  border-right: 1px solid #1e2533;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed {
+  width: 60px;
 }
 
 .sidebar .n-menu {
@@ -170,8 +167,11 @@ body {
 
 /* ========== 主内容 ========== */
 .main-content {
-  background: #0b0e14;
+  flex: 1;
+  padding: 32px;
   overflow-y: auto;
+  max-width: 960px;
+  background: #0b0e14;
 }
 
 /* ========== 页面标题 ========== */
