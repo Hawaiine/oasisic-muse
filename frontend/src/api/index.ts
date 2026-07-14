@@ -48,3 +48,21 @@ export async function getNotifyStatus() {
 export async function healthCheck() {
   return api('/health')
 }
+
+export async function searchPT(keyword: string, actor?: string) {
+  const params: Record<string, string> = { keyword }
+  if (actor) params.actor = actor
+  return api('/search', { params })
+}
+
+export async function getLibraryStatus() {
+  return api('/library/status')
+}
+
+export async function getRecentMedia(limit = 10) {
+  return api('/library/recent', { params: { limit: String(limit) } })
+}
+
+export async function refreshLibrary() {
+  return api('/library/refresh', { method: 'POST' })
+}

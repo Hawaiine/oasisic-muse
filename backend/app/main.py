@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -10,13 +12,33 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .database import init_db
-from .routers import about, subscribe, download, settings as settings_router, notify
+from .routers import about, subscribe, download, library, settings as settings_router, notify, search
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期"""
+    # 启动
+    Path(settings.database_url.replace("sqlite:///", "")).parent.mkdir(parents=True, exist_ok=True)
+    init_db()
+    logger.info("Oasisic Muse 启动完成")
+    yield
+    # 关闭
+    logger.info("Oasisic Muse 关闭")
+
 
 app = FastAPI(
     title="Oasisic Muse",
     description="AV 自动化刮削下载工具",
-    version="0.1.0",
+    version="0.2.0",
     docs_url="/api/docs" if settings.debug else None,
+    lifespan=lifespan,
 )
 
 # CORS
@@ -32,16 +54,10 @@ app.add_middleware(
 app.include_router(about.router, prefix="/api", tags=["关于"])
 app.include_router(subscribe.router, prefix="/api", tags=["订阅"])
 app.include_router(download.router, prefix="/api", tags=["下载"])
+app.include_router(library.router, prefix="/api", tags=["媒体库"])
 app.include_router(settings_router.router, prefix="/api", tags=["设置"])
 app.include_router(notify.router, prefix="/api", tags=["通知"])
-
-
-@app.on_event("startup")
-async def startup():
-    """初始化"""
-    # 确保数据目录存在
-    Path(settings.database_url.replace("sqlite:///", "")).parent.mkdir(parents=True, exist_ok=True)
-    init_db()
+app.include_router(search.router, prefix="/api", tags=["搜索"])
 
 
 # 静态文件（Vue 构建产物）
@@ -52,4 +68,4 @@ if static_dir.exists():
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": "0.2.0"}

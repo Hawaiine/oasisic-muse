@@ -7,6 +7,7 @@ import Downloads from './views/Downloads.vue'
 import Library from './views/Library.vue'
 import Settings from './views/Settings.vue'
 import About from './views/About.vue'
+import Search from './views/Search.vue'
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
@@ -16,6 +17,7 @@ const routes = [
   { path: '/library', component: Library, meta: { title: '媒体库', icon: '🎬' } },
   { path: '/settings', component: Settings, meta: { title: '设置', icon: '⚙️' } },
   { path: '/about', component: About, meta: { title: '关于', icon: 'ℹ️' } },
+  { path: '/search', component: Search, meta: { title: '搜索', icon: '🔍' } },
 ]
 
 const router = createRouter({
