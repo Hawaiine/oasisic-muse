@@ -131,7 +131,7 @@ import { useMessage } from 'naive-ui'
 import {
   BookOutline, DownloadOutline, TrendingUpOutline, WifiOutline,
   SearchOutline, AddOutline, SettingsOutline, ListOutline
-} from 'vicons/ionicons5'
+} from '@vicons/ionicons5'
 import { getSubscribes, getDownloads, getDownloadStats, healthCheck } from '../api'
 
 const message = useMessage()

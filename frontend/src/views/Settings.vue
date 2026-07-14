@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { getSettings, saveAllSettings } from '../api'
 

@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
 import type { DataTableColumns } from 'naive-ui'
-import { DownloadOutline, TrendingUpOutline, WifiOutline } from 'vicons/ionicons5'
+import { DownloadOutline, TrendingUpOutline, WifiOutline } from '@vicons/ionicons5'
 import { getDownloads, getDownloadStats } from '../api'
 
 const stats = ref({ total: 0, seeders: 0, connected: false })
