@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import type { DataTableColumns, FormInst } from 'naive-ui'
+import type { DataTableColumns } from 'naive-ui'
 import { useMessage } from 'naive-ui'
 import { getSubscribes, createSubscribe, toggleSubscribe, deleteSubscribe } from '../api'
 
@@ -47,9 +47,7 @@ const columns: DataTableColumns<any> = [
     title: '状态',
     key: 'enabled',
     render(row) {
-      return h('span', {
-        class: `badge badge-${row.enabled ? 'green' : 'gray'}`,
-      }, row.enabled ? '启用' : '禁用')
+      return h('n-tag', { type: row.enabled ? 'success' : 'default', size: 'small', round: true }, () => row.enabled ? '启用' : '禁用')
     },
   },
   {
@@ -57,14 +55,17 @@ const columns: DataTableColumns<any> = [
     key: 'actions',
     render(row) {
       return h('div', { style: 'display: flex; gap: 8px;' }, [
-        h('button', {
-          class: 'btn btn-sm',
+        h('n-button', {
+          size: 'small',
+          quaternary: true,
           onClick: () => toggle(row.id),
-        }, row.enabled ? '禁用' : '启用'),
-        h('button', {
-          class: 'btn btn-sm btn-danger',
+        }, () => row.enabled ? '禁用' : '启用'),
+        h('n-button', {
+          size: 'small',
+          quaternary: true,
+          type: 'error',
           onClick: () => remove(row.id),
-        }, '删除'),
+        }, () => '删除'),
       ])
     },
   },
@@ -79,7 +80,7 @@ async function load() {
 async function add() {
   if (!newSub.value.keyword.trim()) return
   try {
-    await createSubscribe(newSub.value)
+    await createSubscribe(newSub.value.keyword, newSub.value.actor)
     newSub.value = { keyword: '', actor: '' }
     message.success('添加成功')
     await load()

@@ -1,7 +1,7 @@
 <template>
   <div class="settings-page">
     <n-page-header title="设置" subtitle="系统配置，所有配置实时保存，不填表示跳过对应功能">
-      <template #footer>
+      <template #extra>
         <n-tag type="success" round>已保存</n-tag>
       </template>
     </n-page-header>
@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
-import { getSettings, saveSettings } from '../api'
+import { getSettings, saveAllSettings, updateLimits } from '../api'
 
 const ptSites = [
   { short: 'mteam', name: 'MTeam', url: 'https://mt2.cc', auth_type: ['cookie'] },
@@ -183,7 +183,24 @@ async function load() {
 
 async function save() {
   try {
-    await saveSettings(forms)
+    await saveAllSettings({
+      pt: JSON.stringify(forms.pt),
+      qb_host: forms.qb.host,
+      qb_port: String(forms.qb.port),
+      qb_username: forms.qb.username,
+      qb_password: forms.qb.password,
+      emby_host: forms.emby.host,
+      emby_api_key: forms.emby.api_key,
+      telegram_bot_token: forms.telegram.bot_token,
+      telegram_chat_id: forms.telegram.chat_id,
+      discord_webhook_url: forms.discord.webhook_url,
+      http_proxy: forms.proxy.http_proxy,
+      daily_limit: String(forms.limits.daily_limit),
+      concurrent: String(forms.limits.concurrent),
+      disk_threshold: String(forms.limits.disk_threshold),
+      max_file_size: String(forms.limits.max_file_size),
+      max_seeds: String(forms.limits.max_seeds),
+    })
   } catch {}
 }
 

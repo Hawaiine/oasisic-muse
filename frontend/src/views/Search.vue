@@ -30,7 +30,7 @@
       <n-grid-item v-for="r in results" :key="r.torrent_url">
         <n-card :bordered="false" embedded>
           <n-space vertical>
-            <n-image v-if="r.cover" :src="r.cover" :fallback-src="''" object-fit="cover" style="width: 100%; height: 180px; border-radius: 8px;" />
+            <n-image v-if="r.cover" :src="r.cover" object-fit="cover" style="width: 100%; height: 180px; border-radius: 8px;" />
             <div v-else style="width: 100%; height: 180px; background: #1a202c; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🎬</div>
             <n-text strong>{{ r.title_cn || r.title }}</n-text>
             <n-text depth="3" v-if="r.title_cn">{{ r.title }}</n-text>
@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { searchTorrents, downloadTorrent, getPTSites } from '../api'
+import { searchPT, getPTSitesConfig } from '../api'
 
 const searchForm = ref({ keyword: '', actor: '' })
 const results = ref<any[]>([])
@@ -66,7 +66,7 @@ const sites = ref<any[]>([])
 
 async function loadSites() {
   try {
-    sites.value = await getPTSites()
+    sites.value = await getPTSitesConfig()
   } catch {}
 }
 
@@ -75,10 +75,7 @@ async function doSearch() {
   loading.value = true
   errorMsg.value = ''
   try {
-    results.value = await searchTorrents({
-      keyword: searchForm.value.keyword,
-      actor: searchForm.value.actor,
-    })
+    results.value = await searchPT(searchForm.value.keyword, searchForm.value.actor)
   } catch (e: any) {
     errorMsg.value = e.message || '搜索失败'
   } finally {
@@ -88,7 +85,7 @@ async function doSearch() {
 
 async function download(r: any) {
   try {
-    await downloadTorrent(r.torrent_url, r.save_path)
+    await import('../api').then(m => m.downloadTorrent(r.torrent_url, r.save_path))
   } catch {}
 }
 

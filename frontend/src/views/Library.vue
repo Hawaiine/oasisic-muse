@@ -7,14 +7,12 @@
     </n-page-header>
 
     <n-card :bordered="false" embedded style="margin-bottom: 16px;">
-      <n-space vertical>
-        <n-alert :type="status.connected ? 'success' : 'error'" :show-icon="false">
-          {{ status.connected
-            ? `${status.server_name} (v${status.version}) — 已连接 ✅`
-            : '未连接 — 请在设置中配置 EMBY/Jellyfin 地址'
-          }}
-        </n-alert>
-      </n-space>
+      <n-alert :type="status.connected ? 'success' : 'error'" :show-icon="false">
+        {{ status.connected
+          ? `${status.server_name} (v${status.version}) — 已连接 ✅`
+          : '未连接 — 请在设置中配置 EMBY/Jellyfin 地址'
+        }}
+      </n-alert>
     </n-card>
 
     <n-card title="最近添加" :bordered="false" embedded>
@@ -23,7 +21,7 @@
         <n-grid-item v-for="item in items" :key="item.id">
           <n-card :bordered="false" embedded>
             <n-space vertical>
-              <n-text depth="3">{{ item.title }}</n-text>
+              <n-text depth="2">{{ item.title }}</n-text>
               <n-tag size="small" round>{{ item.type }}</n-tag>
             </n-space>
           </n-card>
@@ -35,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getLibraryStatus, getLibraryItems } from '../api'
+import { getLibraryStatus, getRecentMedia } from '../api'
 
 const status = ref({ connected: false, server_name: '', version: '' })
 const items = ref<any[]>([])
@@ -47,7 +45,7 @@ async function load() {
   } catch {}
 
   try {
-    items.value = await getLibraryItems()
+    items.value = await getRecentMedia()
   } catch {}
 }
 

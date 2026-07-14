@@ -4,7 +4,7 @@
 
     <n-card :bordered="false" embedded style="margin-top: 16px;">
       <n-space vertical align="center">
-        <n-icon size="48" :component="MusicOutline" />
+        <span style="font-size: 48px;">🎵</span>
         <n-text depth="1" strong style="font-size: 20px;">{{ about.title }}</n-text>
         <n-text depth="3">{{ about.description }}</n-text>
         <n-tag type="info" round size="large">v{{ about.version }}</n-tag>
