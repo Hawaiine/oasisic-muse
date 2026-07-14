@@ -1,37 +1,51 @@
 <template>
   <div class="downloads-page">
-    <n-page-header title="下载任务" subtitle="查看和管理下载队列">
+    <n-page-header title="下载任务" subtitle="查看和管理 qBittorrent 下载队列" style="margin-bottom: 24px;">
       <template #extra>
-        <n-button @click="load">刷新</n-button>
+        <n-button @click="load" size="small">🔄 刷新</n-button>
       </template>
     </n-page-header>
 
-    <n-grid :cols="4" :x-gap="14" :y-gap="14" responsive="screen">
+    <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen" style="margin-bottom: 16px;">
       <n-grid-item>
         <n-card :bordered="false" embedded>
-          <n-statistic label="总计" :value="stats.total" />
+          <n-statistic label="总下载数">
+            <template #prefix><n-icon :component="DownloadOutline" /></template>
+            {{ stats.total }}
+          </n-statistic>
         </n-card>
       </n-grid-item>
       <n-grid-item>
         <n-card :bordered="false" embedded>
-          <n-statistic label="已完成" :value="stats.done" />
+          <n-statistic label="活跃种子">
+            <template #prefix><n-icon :component="TrendingUpOutline" /></template>
+            {{ stats.seeders }}
+          </n-statistic>
         </n-card>
       </n-grid-item>
       <n-grid-item>
         <n-card :bordered="false" embedded>
-          <n-statistic label="下载中" :value="stats.downloading" />
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <n-statistic label="等待中" :value="stats.pending" />
+          <n-statistic label="连接状态">
+            <template #prefix><n-icon :component="WifiOutline" /></template>
+            <template #default>
+              <n-tag :type="stats.connected ? 'success' : 'error'" round size="small">
+                {{ stats.connected ? '已连接' : '未连接' }}
+              </n-tag>
+            </template>
+          </n-statistic>
         </n-card>
       </n-grid-item>
     </n-grid>
 
-    <n-card title="任务列表" :bordered="false" embedded style="margin-top: 16px;">
-      <n-empty v-if="tasks.length === 0" description="暂无下载任务" />
-      <n-data-table v-else :columns="columns" :data="tasks" :bordered="false" :single-line="false" />
+    <n-card :bordered="false" embedded>
+      <n-data-table
+        :columns="columns"
+        :data="downloads"
+        :bordered="false"
+        :striped="true"
+        :pagination="{ pageSize: 10 }"
+        size="small"
+      />
     </n-card>
   </div>
 </template>
@@ -39,38 +53,33 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
 import type { DataTableColumns } from 'naive-ui'
+import { DownloadOutline, TrendingUpOutline, WifiOutline } from 'vicons/ionicons5'
 import { getDownloads, getDownloadStats } from '../api'
 
-const tasks = ref<any[]>([])
-const stats = ref({ total: 0, done: 0, downloading: 0, pending: 0 })
+const stats = ref({ total: 0, seeders: 0, connected: false })
+const downloads = ref<any[]>([])
 
 const columns: DataTableColumns<any> = [
-  { title: '标题', key: 'title' },
-  { title: '站点', key: 'site' },
-  {
-    title: '状态',
-    key: 'status',
-    render(row) {
-      const type = row.status === 'completed' ? 'success' :
-                   row.status === 'downloading' ? 'primary' :
-                   row.status === 'pending' ? 'warning' : 'error'
-      return h('n-tag', { type, size: 'small', round: true }, () => row.status)
-    },
-  },
-  { title: '进度', key: 'progress', render(row) {
+  { title: '名称', key: 'name', ellipsis: { tooltip: true } },
+  { title: '大小', key: 'size' },
+  { title: '进度', key: 'progress', width: 150, render(row) {
     return h('n-progress', {
-      percentage: row.progress ?? 0,
-      type: 'success',
+      percentage: row.progress || 0,
+      type: 'line',
       indicator: 'inside',
+      strokeWidth: 6,
     })
   }},
+  { title: '状态', key: 'state' },
 ]
 
 async function load() {
   try {
-    tasks.value = await getDownloads()
     const s = await getDownloadStats()
-    Object.assign(stats.value, s as any)
+    stats.value = s as any
+  } catch {}
+  try {
+    downloads.value = await getDownloads()
   } catch {}
 }
 

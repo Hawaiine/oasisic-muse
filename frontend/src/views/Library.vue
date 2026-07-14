@@ -1,8 +1,8 @@
 <template>
   <div class="library-page">
-    <n-page-header title="媒体库" subtitle="Jellyfin / EMBY 媒体管理">
+    <n-page-header title="媒体库" subtitle="Jellyfin / EMBY 媒体管理" style="margin-bottom: 24px;">
       <template #extra>
-        <n-button @click="load">刷新</n-button>
+        <n-button @click="load" size="small">🔄 刷新</n-button>
       </template>
     </n-page-header>
 
@@ -19,9 +19,10 @@
       <n-empty v-if="items.length === 0" description="暂无媒体记录" />
       <n-grid v-else :cols="4" :x-gap="14" :y-gap="14" responsive="screen">
         <n-grid-item v-for="item in items" :key="item.id">
-          <n-card :bordered="false" embedded>
+          <n-card :bordered="false" embedded hoverable>
             <n-space vertical>
-              <n-text depth="2">{{ item.title }}</n-text>
+              <n-image v-if="item.poster" :src="item.poster" object-fit="cover" style="width: 100%; height: 160px; border-radius: 8px;" />
+              <n-text strong style="font-size: 13px;">{{ item.title }}</n-text>
               <n-tag size="small" round>{{ item.type }}</n-tag>
             </n-space>
           </n-card>
@@ -43,7 +44,6 @@ async function load() {
     const s = await getLibraryStatus()
     status.value = s as any
   } catch {}
-
   try {
     items.value = await getRecentMedia()
   } catch {}

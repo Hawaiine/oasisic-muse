@@ -1,8 +1,8 @@
 <template>
   <div class="search-page">
-    <n-page-header title="搜索" subtitle="PT 站点资源搜索">
+    <n-page-header title="搜索" subtitle="PT 站点资源搜索" style="margin-bottom: 24px;">
       <template #extra>
-        <n-button @click="loadSites">刷新站点</n-button>
+        <n-button @click="loadSites" size="small">🔄 刷新站点</n-button>
       </template>
     </n-page-header>
 
@@ -16,7 +16,7 @@
         </n-form-item>
         <n-form-item>
           <n-button type="primary" html-type="submit" :loading="loading">
-            {{ loading ? '搜索中...' : '搜索' }}
+            {{ loading ? '搜索中...' : '🔍 搜索' }}
           </n-button>
         </n-form-item>
       </n-form>
@@ -28,23 +28,20 @@
 
     <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen">
       <n-grid-item v-for="r in results" :key="r.torrent_url">
-        <n-card :bordered="false" embedded>
+        <n-card :bordered="false" embedded hoverable>
           <n-space vertical>
             <n-image v-if="r.cover" :src="r.cover" object-fit="cover" style="width: 100%; height: 180px; border-radius: 8px;" />
-            <div v-else style="width: 100%; height: 180px; background: #1a202c; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🎬</div>
+            <div v-else style="width: 100%; height: 180px; background: #161b22; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🎬</div>
             <n-text strong>{{ r.title_cn || r.title }}</n-text>
-            <n-text depth="3" v-if="r.title_cn">{{ r.title }}</n-text>
+            <n-text depth="3" v-if="r.title_cn" style="font-size: 12px;">{{ r.title }}</n-text>
             <n-space>
               <n-tag size="small" round>{{ r.site }}</n-tag>
               <n-tag v-if="r.size" size="small" round>{{ r.size }}</n-tag>
               <n-tag size="small" round type="success">🟢 {{ r.seeders }}</n-tag>
             </n-space>
-            <n-text depth="3" v-if="r.actors && r.actors.length">
+            <n-text depth="3" v-if="r.actors && r.actors.length" style="font-size: 12px;">
               {{ r.actors.slice(0, 3).join(' / ') }}
             </n-text>
-            <n-button block size="small" type="primary" @click="download(r)" v-if="r.torrent_url">
-              ⬇️ 下载
-            </n-button>
           </n-space>
         </n-card>
       </n-grid-item>
@@ -81,10 +78,6 @@ async function doSearch() {
   } finally {
     loading.value = false
   }
-}
-
-async function download(r: any) {
-  // 下载功能需要后端 API 支持
 }
 
 onMounted(loadSites)

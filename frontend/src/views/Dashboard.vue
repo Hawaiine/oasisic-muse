@@ -1,123 +1,183 @@
 <template>
   <div class="dashboard">
-    <div class="page-header">
-      <n-page-header title="总览" subtitle="Oasisic Muse 系统概览" />
-      <n-space>
-        <n-tag type="info" round>
-          v0.3.0
-        </n-tag>
-        <n-button size="small" @click="refresh">
-          刷新
-        </n-button>
-      </n-space>
-    </div>
+    <n-page-header title="总览" subtitle="Oasisic Muse 系统概览" style="margin-bottom: 24px;">
+      <template #extra>
+        <n-space>
+          <n-tag type="info" round>
+            v{{ version }}
+          </n-tag>
+          <n-button @click="load" size="small">
+            🔄 刷新
+          </n-button>
+        </n-space>
+      </template>
+    </n-page-header>
 
-    <n-grid :cols="4" :x-gap="14" :y-gap="14" responsive="screen">
-      <n-grid-item v-for="stat in stats" :key="stat.key">
+    <!-- 统计卡片 -->
+    <n-grid :cols="4" :x-gap="16" :y-gap="16" responsive="screen">
+      <n-grid-item>
         <n-card :bordered="false" embedded>
-          <n-statistic :label="stat.label" :value="stat.value" :style="{ color: stat.color }">
+          <n-statistic label="订阅数" :value="subCount">
             <template #prefix>
-              <span :style="{ fontSize: '20px' }">{{ stat.icon }}</span>
+              <n-icon :component="BookOutline" size="18" />
+            </template>
+          </n-statistic>
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card :bordered="false" embedded>
+          <n-statistic label="下载中" :value="dlCount">
+            <template #prefix>
+              <n-icon :component="DownloadOutline" size="18" />
+            </template>
+          </n-statistic>
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card :bordered="false" embedded>
+          <n-statistic label="种子数" :value="seederCount">
+            <template #prefix>
+              <n-icon :component="TrendingUpOutline" size="18" />
+            </template>
+          </n-statistic>
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card :bordered="false" embedded>
+          <n-statistic label="状态">
+            <template #default>
+              <n-tag :type="online ? 'success' : 'error'" round size="small">
+                {{ online ? '在线' : '离线' }}
+              </n-tag>
+            </template>
+            <template #prefix>
+              <n-icon :component="WifiOutline" size="18" />
             </template>
           </n-statistic>
         </n-card>
       </n-grid-item>
     </n-grid>
 
-    <n-grid :cols="2" :x-gap="14" :y-gap="14" responsive="screen" style="margin-top: 14px;">
+    <!-- 快捷入口 -->
+    <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen" style="margin-top: 16px;">
       <n-grid-item>
-        <n-card title="服务状态" :bordered="false" embedded>
-          <n-list>
-            <n-list-item>
-              <n-list-item-meta description="FastAPI 后端服务">
-                <template #avatar>
-                  <n-tag :bordered="false" :type="backendStatus ? 'success' : 'error'" round size="small">
-                    {{ backendStatus ? '运行中' : '离线' }}
-                  </n-tag>
-                </template>
-              </n-list-item-meta>
-            </n-list-item>
-            <n-list-item>
-              <n-list-item-meta description="通知推送通道">
-                <template #avatar>
-                  <n-tag :bordered="false" :type="notifyConfigured ? 'success' : 'warning'" round size="small">
-                    {{ notifyConfigured ? '已配置' : '未配置' }}
-                  </n-tag>
-                </template>
-              </n-list-item-meta>
-            </n-list-item>
-            <n-list-item>
-              <n-list-item-meta description="订阅引擎调度器">
-                <template #avatar>
-                  <n-tag :bordered="false" :type="engineRunning ? 'success' : 'warning'" round size="small">
-                    {{ engineRunning ? '运行中' : '已暂停' }}
-                  </n-tag>
-                </template>
-              </n-list-item-meta>
-            </n-list-item>
-          </n-list>
+        <n-card :bordered="false" embedded hoverable>
+          <template #header>
+            <n-space>
+              <n-icon :component="SearchOutline" size="18" />
+              <n-text strong>快速搜索</n-text>
+            </n-space>
+          </template>
+          <n-text depth="3" style="font-size: 13px;">输入番号搜索 PT 资源</n-text>
+          <template #footer>
+            <n-button text type="primary" size="small" @click="$router.push('/search')">
+              去搜索 →
+            </n-button>
+          </template>
         </n-card>
       </n-grid-item>
-
       <n-grid-item>
-        <n-card title="快速操作" :bordered="false" embedded>
-          <n-space vertical :size="8">
-            <n-button block quaternary @click="$router.push('/search')">
-              🔍 搜索资源
+        <n-card :bordered="false" embedded hoverable>
+          <template #header>
+            <n-space>
+              <n-icon :component="AddOutline" size="18" />
+              <n-text strong>新建订阅</n-text>
+            </n-space>
+          </template>
+          <n-text depth="3" style="font-size: 13px;">添加关键词自动搜索下载</n-text>
+          <template #footer>
+            <n-button text type="primary" size="small" @click="$router.push('/subscribe')">
+              去订阅 →
             </n-button>
-            <n-button block quaternary @click="$router.push('/subscribe')">
-              📋 管理订阅
+          </template>
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card :bordered="false" embedded hoverable>
+          <template #header>
+            <n-space>
+              <n-icon :component="SettingsOutline" size="18" />
+              <n-text strong>系统设置</n-text>
+            </n-space>
+          </template>
+          <n-text depth="3" style="font-size: 13px;">配置 qBittorrent、PT 站点、通知</n-text>
+          <template #footer>
+            <n-button text type="primary" size="small" @click="$router.push('/settings')">
+              去设置 →
             </n-button>
-            <n-button block quaternary @click="$router.push('/settings')">
-              ⚙️ 系统设置
-            </n-button>
-          </n-space>
+          </template>
         </n-card>
       </n-grid-item>
     </n-grid>
+
+    <!-- 最近下载 -->
+    <n-card :bordered="false" embedded style="margin-top: 16px;">
+      <template #header>
+        <n-space>
+          <n-icon :component="ListOutline" size="18" />
+          <n-text strong>最近下载</n-text>
+        </n-space>
+      </template>
+      <n-empty v-if="downloads.length === 0" description="暂无下载记录" />
+      <n-data-table v-else :columns="dlColumns" :data="downloads" :bordered="false" :striped="true" :pagination="false" size="small" />
+    </n-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { healthCheck, getDownloadStats, getNotifyStatus, getLimits } from '../api'
+import { ref, onMounted, h } from 'vue'
+import type { DataTableColumns } from 'naive-ui'
+import { useMessage } from 'naive-ui'
+import {
+  BookOutline, DownloadOutline, TrendingUpOutline, WifiOutline,
+  SearchOutline, AddOutline, SettingsOutline, ListOutline
+} from 'vicons/ionicons5'
+import { getSubscribes, getDownloads, getDownloadStats, healthCheck } from '../api'
 
-const stats = ref([
-  { key: 'subscribes', label: '订阅数', value: 0, icon: '📋', color: '#1d9bf0' },
-  { key: 'downloads', label: '下载总量', value: 0, icon: '⬇️', color: '#22c55e' },
-  { key: 'done', label: '已完成', value: 0, icon: '✅', color: '#eab308' },
-  { key: 'pending', label: '等待中', value: 0, icon: '⏳', color: '#ef4444' },
-])
-const backendStatus = ref(false)
-const notifyConfigured = ref(false)
-const engineRunning = ref(false)
+const message = useMessage()
+const version = ref('0.3.0')
+const online = ref(false)
+const subCount = ref(0)
+const dlCount = ref(0)
+const seederCount = ref(0)
+const downloads = ref<any[]>([])
 
-async function refresh() {
-  await load()
-}
+const dlColumns: DataTableColumns<any> = [
+  { title: '名称', key: 'name', ellipsis: { tooltip: true } },
+  { title: '大小', key: 'size' },
+  { title: '进度', key: 'progress', render(row) {
+    return h('n-progress', {
+      percentage: row.progress || 0,
+      type: 'line',
+      indicator: 'inside',
+      strokeWidth: 6,
+    })
+  }},
+  { title: '状态', key: 'state' },
+]
 
 async function load() {
   try {
     await healthCheck()
-    backendStatus.value = true
-  } catch { backendStatus.value = false }
+    online.value = true
+  } catch {
+    online.value = false
+  }
 
   try {
-    const s = await getDownloadStats()
-    stats.value[0].value = (s as any).subscribes ?? 0
-    stats.value[1].value = (s as any).downloads ?? 0
-    stats.value[2].value = (s as any).done ?? 0
-    stats.value[3].value = (s as any).pending ?? 0
+    const subs = await getSubscribes()
+    subCount.value = (subs as any[]).length
   } catch {}
 
   try {
-    const n = await getNotifyStatus()
-    notifyConfigured.value = (n as any).channels?.some((c: any) => c.configured)
+    const stats = await getDownloadStats()
+    const s = stats as any
+    dlCount.value = s.total || 0
+    seederCount.value = s.seeders || 0
   } catch {}
 
   try {
-    const l = await getLimits()
-    engineRunning.value = (l as any).enabled
+    downloads.value = await getDownloads()
   } catch {}
 }
 
@@ -125,12 +185,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.dashboard { max-width: 800px; }
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-.page-header .n-page-header { padding: 0; }
+.dashboard { max-width: 960px; }
+.n-card { border-radius: 12px !important; }
 </style>

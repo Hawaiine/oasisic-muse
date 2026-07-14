@@ -1,139 +1,160 @@
 <template>
   <div class="settings-page">
-    <n-page-header title="设置" subtitle="系统配置，所有配置实时保存，不填表示跳过对应功能">
+    <n-page-header title="设置" subtitle="系统配置，所有配置实时保存，不填表示跳过对应功能" style="margin-bottom: 24px;">
       <template #extra>
-        <n-tag type="success" round>已保存</n-tag>
+        <n-button type="primary" @click="save" :loading="saving">
+          💾 保存设置
+        </n-button>
       </template>
     </n-page-header>
 
     <n-grid :cols="2" :x-gap="16" :y-gap="16" responsive="screen">
       <!-- PT 站点认证 -->
       <n-grid-item span="2">
-        <n-card title="🔐 PT 站点认证" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span style="font-size: 16px;">🔐</span>
+              <n-text strong>PT 站点认证</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
             Cookie / Passkey 用于搜索和下载，不填则跳过该站点
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.pt" label-width="80">
-            <n-grid :cols="2" :x-gap="16" :y-gap="12" responsive="screen">
-              <n-grid-item v-for="site in ptSites" :key="site.short">
-                <n-form-item :label="site.name">
-                  <n-input v-model:value="(forms.pt as any)[site.short].cookie" placeholder="Cookie (选填)" size="small" />
-                  <n-input v-if="site.auth_type.includes('passkey')" v-model:value="(forms.pt as any)[site.short].passkey" placeholder="Passkey (选填)" size="small" style="margin-top: 4px;" />
-                </n-form-item>
-              </n-grid-item>
-            </n-grid>
-          </n-form>
+          <n-grid :cols="2" :x-gap="16" :y-gap="12" responsive="screen">
+            <n-grid-item v-for="site in ptSites" :key="site.short">
+              <n-card :bordered="false" embedded>
+                <n-text strong style="font-size: 13px;">{{ site.name }}</n-text>
+                <n-space vertical style="margin-top: 8px;">
+                  <n-input v-model:value="(forms.pt as any)[site.short]?.cookie" placeholder="Cookie" size="small" />
+                  <n-input v-if="site.auth_type.includes('passkey')" v-model:value="(forms.pt as any)[site.short]?.passkey" placeholder="Passkey" size="small" />
+                </n-space>
+              </n-card>
+            </n-grid-item>
+          </n-grid>
         </n-card>
       </n-grid-item>
 
       <!-- 下载器 -->
       <n-grid-item>
-        <n-card title="⬇️ 下载器 (qBittorrent)" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>⬇️</span>
+              <n-text strong>下载器 (qBittorrent)</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            Web UI 连接信息，不填则跳过自动下载
+            Web UI 连接信息
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.qb" label-width="60">
-            <n-form-item label="地址">
-              <n-input v-model:value="forms.qb.host" placeholder="192.168.1.100" size="small" />
-            </n-form-item>
-            <n-form-item label="端口">
-              <n-input-number v-model:value="forms.qb.port" placeholder="8080" size="small" />
-            </n-form-item>
-            <n-form-item label="用户名">
-              <n-input v-model:value="forms.qb.username" placeholder="admin" size="small" />
-            </n-form-item>
-            <n-form-item label="密码">
-              <n-input v-model:value="forms.qb.password" type="password" placeholder="选填" size="small" />
-            </n-form-item>
-          </n-form>
+          <n-space vertical>
+            <n-input v-model:value="forms.qb.host" placeholder="主机地址 (如 192.168.1.100)" size="small" />
+            <n-input-number v-model:value="forms.qb.port" placeholder="端口 (如 8080)" size="small" style="width: 100%;" />
+            <n-input v-model:value="forms.qb.username" placeholder="用户名" size="small" />
+            <n-input v-model:value="forms.qb.password" type="password" placeholder="密码" size="small" />
+          </n-space>
         </n-card>
       </n-grid-item>
 
       <!-- 媒体库 -->
       <n-grid-item>
-        <n-card title="🎬 媒体库 (Jellyfin/EMBY)" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>🎬</span>
+              <n-text strong>媒体库 (Jellyfin/EMBY)</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            下载完成后自动入库，不填则跳过
+            下载完成后自动入库
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.emby" label-width="60">
-            <n-form-item label="地址">
-              <n-input v-model:value="forms.emby.host" placeholder="http://192.168.1.100:8096" size="small" />
-            </n-form-item>
-            <n-form-item label="API密钥">
-              <n-input v-model:value="forms.emby.api_key" type="password" placeholder="选填" size="small" />
-            </n-form-item>
-          </n-form>
+          <n-space vertical>
+            <n-input v-model:value="forms.emby.host" placeholder="http://192.168.1.100:8096" size="small" />
+            <n-input v-model:value="forms.emby.api_key" type="password" placeholder="API 密钥" size="small" />
+          </n-space>
         </n-card>
       </n-grid-item>
 
       <!-- Telegram -->
       <n-grid-item>
-        <n-card title="🔔 Telegram 通知" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>🔔</span>
+              <n-text strong>Telegram 通知</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            任务完成通知推送，不填则不推送
+            任务完成通知推送
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.telegram" label-width="60">
-            <n-form-item label="Token">
-              <n-input v-model:value="forms.telegram.bot_token" placeholder="Bot Token" size="small" />
-            </n-form-item>
-            <n-form-item label="Chat ID">
-              <n-input v-model:value="forms.telegram.chat_id" placeholder="-100xxxxxxxx" size="small" />
-            </n-form-item>
-          </n-form>
+          <n-space vertical>
+            <n-input v-model:value="forms.telegram.bot_token" placeholder="Bot Token" size="small" />
+            <n-input v-model:value="forms.telegram.chat_id" placeholder="-100xxxxxxxx" size="small" />
+          </n-space>
         </n-card>
       </n-grid-item>
 
       <!-- Discord -->
       <n-grid-item>
-        <n-card title="💬 Discord 通知" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>💬</span>
+              <n-text strong>Discord 通知</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            Webhook URL，不填则不推送
+            Webhook URL
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.discord" label-width="60">
-            <n-form-item label="Webhook">
-              <n-input v-model:value="forms.discord.webhook_url" placeholder="https://discord.com/api/..." size="small" />
-            </n-form-item>
-          </n-form>
+          <n-input v-model:value="forms.discord.webhook_url" placeholder="https://discord.com/api/..." size="small" />
         </n-card>
       </n-grid-item>
 
       <!-- 代理 -->
       <n-grid-item>
-        <n-card title="🌐 代理设置" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>🌐</span>
+              <n-text strong>代理设置</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            AV 刮削 / PT 搜索使用代理，国内环境可不填
+            AV 刮削 / PT 搜索使用代理
           </n-alert>
-          <n-form inline label-placement="left" :model="forms.proxy" label-width="60">
-            <n-form-item label="地址">
-              <n-input v-model:value="forms.proxy.http_proxy" placeholder="http://127.0.0.1:7890" size="small" />
-            </n-form-item>
-          </n-form>
+          <n-input v-model:value="forms.proxy.http_proxy" placeholder="http://127.0.0.1:7890" size="small" />
         </n-card>
       </n-grid-item>
 
       <!-- 安全限制 -->
       <n-grid-item span="2">
-        <n-card title="🛡️ 安全限制" :bordered="false" embedded>
+        <n-card :bordered="false" embedded>
+          <template #header>
+            <n-space>
+              <span>🛡️</span>
+              <n-text strong>安全限制</n-text>
+            </n-space>
+          </template>
           <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
             控制下载频率和资源消耗
           </n-alert>
-          <n-form inline label-placement="horizontal" :model="forms.limits" label-width="100">
-            <n-form-item label="每日上限">
-              <n-input-number v-model:value="forms.limits.daily_limit" :min="1" :max="999" size="small" />
-            </n-form-item>
-            <n-form-item label="并发数">
-              <n-input-number v-model:value="forms.limits.concurrent" :min="1" :max="10" size="small" />
-            </n-form-item>
-            <n-form-item label="磁盘阈值">
-              <n-input-number v-model:value="forms.limits.disk_threshold" :min="1" :max="100" size="small">%</n-input-number>
-            </n-form-item>
-            <n-form-item label="文件大小">
-              <n-input-number v-model:value="forms.limits.max_file_size" :min="1" size="small">MB</n-input-number>
-            </n-form-item>
-            <n-form-item label="做种数">
-              <n-input-number v-model:value="forms.limits.max_seeds" :min="1" :max="50" size="small" />
-            </n-form-item>
-          </n-form>
+          <n-grid :cols="3" :x-gap="16" :y-gap="12" responsive="screen">
+            <n-grid-item>
+              <n-input-number v-model:value="forms.limits.daily_limit" :min="1" :max="999" placeholder="每日上限" size="small" style="width: 100%;" />
+            </n-grid-item>
+            <n-grid-item>
+              <n-input-number v-model:value="forms.limits.concurrent" :min="1" :max="10" placeholder="并发数" size="small" style="width: 100%;" />
+            </n-grid-item>
+            <n-grid-item>
+              <n-input-number v-model:value="forms.limits.disk_threshold" :min="1" :max="100" placeholder="磁盘阈值 %" size="small" style="width: 100%;" />
+            </n-grid-item>
+            <n-grid-item>
+              <n-input-number v-model:value="forms.limits.max_file_size" :min="1" placeholder="最大文件 MB" size="small" style="width: 100%;" />
+            </n-grid-item>
+            <n-grid-item>
+              <n-input-number v-model:value="forms.limits.max_seeds" :min="1" :max="50" placeholder="最大做种数" size="small" style="width: 100%;" />
+            </n-grid-item>
+          </n-grid>
         </n-card>
       </n-grid-item>
     </n-grid>
@@ -142,7 +163,11 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue'
-import { getSettings, saveAllSettings, updateLimits } from '../api'
+import { useMessage } from 'naive-ui'
+import { getSettings, saveAllSettings } from '../api'
+
+const message = useMessage()
+const saving = ref(false)
 
 const ptSites = [
   { short: 'mteam', name: 'MTeam', url: 'https://mt2.cc', auth_type: ['cookie'] },
@@ -182,6 +207,7 @@ async function load() {
 }
 
 async function save() {
+  saving.value = true
   try {
     await saveAllSettings({
       pt: JSON.stringify(forms.pt),
@@ -201,7 +227,12 @@ async function save() {
       max_file_size: String(forms.limits.max_file_size),
       max_seeds: String(forms.limits.max_seeds),
     })
-  } catch {}
+    message.success('设置已保存')
+  } catch {
+    message.error('保存失败')
+  } finally {
+    saving.value = false
+  }
 }
 
 onMounted(load)

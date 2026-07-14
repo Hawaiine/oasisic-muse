@@ -1,8 +1,8 @@
 <template>
   <div class="subscribe-page">
-    <n-page-header title="订阅管理" subtitle="管理自动搜索与下载任务">
+    <n-page-header title="订阅管理" subtitle="管理自动搜索与下载任务" style="margin-bottom: 24px;">
       <template #extra>
-        <n-button @click="load">刷新</n-button>
+        <n-button @click="load" size="small">🔄 刷新</n-button>
       </template>
     </n-page-header>
 
@@ -15,18 +15,21 @@
           <n-input v-model:value="newSub.actor" placeholder="可选" style="width: 160px;" />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" html-type="submit">添加订阅</n-button>
+          <n-button type="primary" html-type="submit">➕ 添加订阅</n-button>
         </n-form-item>
       </n-form>
     </n-card>
 
-    <n-data-table
-      :columns="columns"
-      :data="subscribes"
-      :bordered="false"
-      striped
-      :pagination="{ pageSize: 10 }"
-    />
+    <n-card :bordered="false" embedded>
+      <n-data-table
+        :columns="columns"
+        :data="subscribes"
+        :bordered="false"
+        :striped="true"
+        :pagination="{ pageSize: 10 }"
+        size="small"
+      />
+    </n-card>
   </div>
 </template>
 
@@ -41,11 +44,12 @@ const subscribes = ref<any[]>([])
 const newSub = ref({ keyword: '', actor: '' })
 
 const columns: DataTableColumns<any> = [
-  { title: '关键词', key: 'keyword' },
-  { title: '演员', key: 'actor' },
+  { title: '关键词', key: 'keyword', ellipsis: { tooltip: true } },
+  { title: '演员', key: 'actor', ellipsis: { tooltip: true } },
   {
     title: '状态',
     key: 'enabled',
+    width: 80,
     render(row) {
       return h('n-tag', { type: row.enabled ? 'success' : 'default', size: 'small', round: true }, () => row.enabled ? '启用' : '禁用')
     },
@@ -53,11 +57,13 @@ const columns: DataTableColumns<any> = [
   {
     title: '操作',
     key: 'actions',
+    width: 120,
     render(row) {
-      return h('div', { style: 'display: flex; gap: 8px;' }, [
+      return h('div', { style: 'display: flex; gap: 4px;' }, [
         h('n-button', {
           size: 'small',
           quaternary: true,
+          type: row.enabled ? 'warning' : 'success',
           onClick: () => toggle(row.id),
         }, () => row.enabled ? '禁用' : '启用'),
         h('n-button', {
