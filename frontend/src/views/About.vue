@@ -1,35 +1,43 @@
 <template>
   <div class="about-page">
-    <n-page-header title="关于" subtitle="Oasisic Muse 系统信息" style="margin-bottom: 24px;" />
+    <div class="page-header">
+      <h2>关于</h2>
+      <p>Oasisic Muse 系统信息</p>
+    </div>
 
-    <n-card :bordered="false" embedded style="margin-bottom: 16px;">
-      <n-space vertical align="center">
-        <span style="font-size: 48px;">🎵</span>
-        <n-text depth="1" strong style="font-size: 20px;">{{ about.title }}</n-text>
-        <n-text depth="3">{{ about.description }}</n-text>
-        <n-tag type="info" round size="large">v{{ about.version }}</n-tag>
-      </n-space>
-    </n-card>
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">系统信息</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+        <div><span style="color: var(--text-muted);">版本：</span>{{ info.version || 'v0.1.0' }}</div>
+        <div><span style="color: var(--text-muted);">构建时间：</span>{{ info.buildDate || '-' }}</div>
+        <div><span style="color: var(--text-muted);">Python：</span>{{ info.python || '-' }}</div>
+        <div><span style="color: var(--text-muted);">Node：</span>{{ info.node || '-' }}</div>
+      </div>
+    </div>
 
-    <n-card title="⚠️ 免责声明" :bordered="false" embedded>
-      <n-text>{{ about.disclaimer }}</n-text>
-    </n-card>
+    <div class="card">
+      <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">免责声明</div>
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+        <p>本项目仅供学习交流使用，不得用于商业用途。</p>
+        <p style="margin-top: 8px;">下载和搜索功能仅支持用户自行授权的 PT 站点，请勿用于非法用途。</p>
+        <p style="margin-top: 8px;">使用本软件产生的所有法律责任由使用者自行承担。</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAbout } from '../api'
+import { api } from '@/api'
 
-const about = ref({ title: 'Oasisic Muse', description: '', disclaimer: '', version: '0.1.0' })
+const info = ref<any>({})
 
 onMounted(async () => {
   try {
-    about.value = await getAbout() as any
-  } catch {}
+    const res = await api.get('/api/about')
+    info.value = res.data || {}
+  } catch {
+    // ignore
+  }
 })
 </script>
-
-<style scoped>
-.about-page { max-width: 640px; }
-</style>

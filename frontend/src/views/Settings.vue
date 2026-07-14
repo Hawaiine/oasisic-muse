@@ -1,195 +1,166 @@
 <template>
   <div class="settings-page">
-    <n-page-header title="设置" subtitle="系统配置，所有配置实时保存，不填表示跳过对应功能" style="margin-bottom: 24px;">
-      <template #extra>
-        <n-button type="primary" @click="save" :loading="saving">
-          💾 保存设置
+    <div class="page-header">
+      <h2>设置</h2>
+      <p>系统配置，所有配置实时保存，不填表示跳过对应功能</p>
+    </div>
+
+    <n-form
+      :model="forms"
+      label-placement="left"
+      label-width="140"
+      size="medium"
+    >
+      <!-- Downloaders -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">📥 下载器</div>
+        <n-grid :cols="2" :x-gap="16" :y-gap="12">
+          <n-form-item label="qBittorrent URL" path="downloader.qbittorrent.url">
+            <n-input v-model:value="forms.downloader.qbittorrent.url" placeholder="http://localhost:8080" />
+          </n-form-item>
+          <n-form-item label="用户名" path="downloader.qbittorrent.username">
+            <n-input v-model:value="forms.downloader.qbittorrent.username" placeholder="admin" />
+          </n-form-item>
+          <n-form-item label="密码" path="downloader.qbittorrent.password">
+            <n-input v-model:value="forms.downloader.qbittorrent.password" type="password" placeholder="••••••••" show-password-on="click" />
+          </n-form-item>
+          <n-form-item label="Referer" path="downloader.qbittorrent.referer">
+            <n-input v-model:value="forms.downloader.qbittorrent.referer" placeholder="可选，部分站点需要" />
+          </n-form-item>
+        </n-grid>
+      </n-card>
+
+      <!-- Media Library -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">📚 媒体库</div>
+        <n-grid :cols="2" :x-gap="16" :y-gap="12">
+          <n-form-item label="Jellyfin URL" path="media.jellyfin.url">
+            <n-input v-model:value="forms.media.jellyfin.url" placeholder="http://localhost:8096" />
+          </n-form-item>
+          <n-form-item label="API Key" path="media.jellyfin.api_key">
+            <n-input v-model:value="forms.media.jellyfin.api_key" placeholder="Jellyfin API Key" />
+          </n-form-item>
+          <n-form-item label="Emby URL" path="media.emby.url">
+            <n-input v-model:value="forms.media.emby.url" placeholder="http://localhost:8096" />
+          </n-form-item>
+          <n-form-item label="API Key" path="media.emby.api_key">
+            <n-input v-model:value="forms.media.emby.api_key" placeholder="Emby API Key" />
+          </n-form-item>
+        </n-grid>
+      </n-card>
+
+      <!-- Notifications -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">🔔 通知</div>
+        <n-grid :cols="2" :x-gap="16" :y-gap="12">
+          <n-form-item label="Telegram Bot Token" path="notify.telegram.bot_token">
+            <n-input v-model:value="forms.notify.telegram.bot_token" placeholder="123456:ABC-DEF" />
+          </n-form-item>
+          <n-form-item label="Chat ID" path="notify.telegram.chat_id">
+            <n-input v-model:value="forms.notify.telegram.chat_id" placeholder="-1001234567890" />
+          </n-form-item>
+          <n-form-item label="Webhook URL" path="notify.webhook.url">
+            <n-input v-model:value="forms.notify.webhook.url" placeholder="https://hooks.example.com/xxx" />
+          </n-form-item>
+          <n-form-item label="Webhook Secret" path="notify.webhook.secret">
+            <n-input v-model:value="forms.notify.webhook.secret" type="password" placeholder="••••••••" />
+          </n-form-item>
+        </n-grid>
+      </n-card>
+
+      <!-- Proxy -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">🌐 代理</div>
+        <n-grid :cols="2" :x-gap="16" :y-gap="12">
+          <n-form-item label="HTTP Proxy" path="proxy.http">
+            <n-input v-model:value="forms.proxy.http" placeholder="http://127.0.0.1:7890" />
+          </n-form-item>
+          <n-form-item label="HTTPS Proxy" path="proxy.https">
+            <n-input v-model:value="forms.proxy.https" placeholder="http://127.0.0.1:7890" />
+          </n-form-item>
+        </n-grid>
+      </n-card>
+
+      <!-- Safety -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">🛡️ 安全限制</div>
+        <n-grid :cols="2" :x-gap="16" :y-gap="12">
+          <n-form-item label="最大文件大小 (GB)" path="safety.max_file_size">
+            <n-input-number v-model:value="forms.safety.max_file_size" :min="1" :max="100" placeholder="10" />
+          </n-form-item>
+          <n-form-item label="最大线程数" path="safety.max_threads">
+            <n-input-number v-model:value="forms.safety.max_threads" :min="1" :max="16" placeholder="4" />
+          </n-form-item>
+        </n-grid>
+      </n-card>
+
+      <!-- PT Sites -->
+      <n-card :bordered="false" embedded style="margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">🏷️ PT 站点认证</div>
+        <n-alert type="info" style="margin-bottom: 16px; font-size: 13px;">
+          每个站点的 Cookie 和 UA，留空表示跳过该站点
+        </n-alert>
+        <n-grid :cols="1" :x-gap="16" v-for="site in ptSites" :key="site.short">
+          <n-card :bordered="false" embedded>
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
+              {{ site.name }}
+            </div>
+            <n-grid :cols="2" :x-gap="16" :y-gap="12">
+              <n-form-item label="Cookie">
+                <n-input
+                  :model-value="getPtValue(site.short, 'cookie')"
+                  @update:model-value="setPtValue(site.short, 'cookie', $event)"
+                  placeholder="站点 Cookie"
+                  size="small"
+                  type="textarea"
+                  :autosize="{ minRows: 2, maxRows: 4 }"
+                />
+              </n-form-item>
+              <n-form-item label="User-Agent">
+                <n-input
+                  :model-value="getPtValue(site.short, 'ua')"
+                  @update:model-value="setPtValue(site.short, 'ua', $event)"
+                  placeholder="User-Agent"
+                  size="small"
+                />
+              </n-form-item>
+            </n-grid>
+          </n-card>
+        </n-grid>
+      </n-card>
+
+      <!-- Save button -->
+      <div style="text-align: right;">
+        <n-button type="primary" @click="handleSave" :loading="saving">
+          💾 保存配置
         </n-button>
-      </template>
-    </n-page-header>
-
-    <n-grid :cols="2" :x-gap="16" :y-gap="16" responsive="screen">
-      <!-- PT 站点认证 -->
-      <n-grid-item span="2">
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span style="font-size: 16px;">🔐</span>
-              <n-text strong>PT 站点认证</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            Cookie / Passkey 用于搜索和下载，不填则跳过该站点
-          </n-alert>
-          <n-grid :cols="2" :x-gap="16" :y-gap="12" responsive="screen">
-            <n-grid-item v-for="site in ptSites" :key="site.short">
-              <n-card :bordered="false" embedded>
-                <n-text strong style="font-size: 13px;">{{ site.name }}</n-text>
-                <n-space vertical style="margin-top: 8px;">
-                  <n-input :model-value="getPtValue(site.short, 'cookie')" @update:model-value="setPtValue(site.short, 'cookie', $event)" placeholder="Cookie" size="small" />
-                  <n-input v-if="site.auth_type.includes('passkey')" :model-value="getPtValue(site.short, 'passkey')" @update:model-value="setPtValue(site.short, 'passkey', $event)" placeholder="Passkey" size="small" />
-                </n-space>
-              </n-card>
-            </n-grid-item>
-          </n-grid>
-        </n-card>
-      </n-grid-item>
-
-      <!-- 下载器 -->
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>⬇️</span>
-              <n-text strong>下载器 (qBittorrent)</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            Web UI 连接信息
-          </n-alert>
-          <n-space vertical>
-            <n-input v-model:value="forms.qb.host" placeholder="主机地址 (如 192.168.1.100)" size="small" />
-            <n-input-number v-model:value="forms.qb.port" placeholder="端口 (如 8080)" size="small" style="width: 100%;" />
-            <n-input v-model:value="forms.qb.username" placeholder="用户名" size="small" />
-            <n-input v-model:value="forms.qb.password" type="password" placeholder="密码" size="small" />
-          </n-space>
-        </n-card>
-      </n-grid-item>
-
-      <!-- 媒体库 -->
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>🎬</span>
-              <n-text strong>媒体库 (Jellyfin/EMBY)</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            下载完成后自动入库
-          </n-alert>
-          <n-space vertical>
-            <n-input v-model:value="forms.emby.host" placeholder="http://192.168.1.100:8096" size="small" />
-            <n-input v-model:value="forms.emby.api_key" type="password" placeholder="API 密钥" size="small" />
-          </n-space>
-        </n-card>
-      </n-grid-item>
-
-      <!-- Telegram -->
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>🔔</span>
-              <n-text strong>Telegram 通知</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            任务完成通知推送
-          </n-alert>
-          <n-space vertical>
-            <n-input v-model:value="forms.telegram.bot_token" placeholder="Bot Token" size="small" />
-            <n-input v-model:value="forms.telegram.chat_id" placeholder="-100xxxxxxxx" size="small" />
-          </n-space>
-        </n-card>
-      </n-grid-item>
-
-      <!-- Discord -->
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>💬</span>
-              <n-text strong>Discord 通知</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            Webhook URL
-          </n-alert>
-          <n-input v-model:value="forms.discord.webhook_url" placeholder="https://discord.com/api/..." size="small" />
-        </n-card>
-      </n-grid-item>
-
-      <!-- 代理 -->
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>🌐</span>
-              <n-text strong>代理设置</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            AV 刮削 / PT 搜索使用代理
-          </n-alert>
-          <n-input v-model:value="forms.proxy.http_proxy" placeholder="http://127.0.0.1:7890" size="small" />
-        </n-card>
-      </n-grid-item>
-
-      <!-- 安全限制 -->
-      <n-grid-item span="2">
-        <n-card :bordered="false" embedded>
-          <template #header>
-            <n-space>
-              <span>🛡️</span>
-              <n-text strong>安全限制</n-text>
-            </n-space>
-          </template>
-          <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-            控制下载频率和资源消耗
-          </n-alert>
-          <n-grid :cols="3" :x-gap="16" :y-gap="12" responsive="screen">
-            <n-grid-item>
-              <n-input-number v-model:value="forms.limits.daily_limit" :min="1" :max="999" placeholder="每日上限" size="small" style="width: 100%;" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-input-number v-model:value="forms.limits.concurrent" :min="1" :max="10" placeholder="并发数" size="small" style="width: 100%;" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-input-number v-model:value="forms.limits.disk_threshold" :min="1" :max="100" placeholder="磁盘阈值 %" size="small" style="width: 100%;" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-input-number v-model:value="forms.limits.max_file_size" :min="1" placeholder="最大文件 MB" size="small" style="width: 100%;" />
-            </n-grid-item>
-            <n-grid-item>
-              <n-input-number v-model:value="forms.limits.max_seeds" :min="1" :max="50" placeholder="最大做种数" size="small" style="width: 100%;" />
-            </n-grid-item>
-          </n-grid>
-        </n-card>
-      </n-grid-item>
-    </n-grid>
+      </div>
+    </n-form>
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, onMounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
-import { getSettings, saveAllSettings } from '../api'
+import { api } from '@/api'
 
 const message = useMessage()
 const saving = ref(false)
 
-const ptSites = [
-  { short: 'mteam', name: 'MTeam', url: 'https://mt2.cc', auth_type: ['cookie'] },
-  { short: 'nicept', name: 'NicePT', url: 'https://nicept.org', auth_type: ['cookie'] },
-  { short: 'pttime', name: 'PT时间', url: 'https://pttime.org', auth_type: ['cookie'] },
-  { short: 'rousi', name: '肉丝', url: 'https://rousi.in', auth_type: ['cookie', 'passkey'] },
-]
+interface PtSite {
+  short: string
+  name: string
+}
+
+const ptSites = ref<PtSite[]>([])
 
 const forms = reactive({
-  pt: {} as Record<string, { cookie?: string; passkey?: string }>,
-  qb: { host: '', port: 8080, username: '', password: '' },
-  emby: { host: '', api_key: '' },
-  telegram: { bot_token: '', chat_id: '' },
-  discord: { webhook_url: '' },
-  proxy: { http_proxy: '' },
-  limits: {
-    daily_limit: 10,
-    concurrent: 3,
-    disk_threshold: 90,
-    max_file_size: 10000,
-    max_seeds: 10,
-  },
+  downloader: { qbittorrent: { url: '', username: '', password: '', referer: '' } },
+  media: { jellyfin: { url: '', api_key: '' }, emby: { url: '', api_key: '' } },
+  notify: { telegram: { bot_token: '', chat_id: '' }, webhook: { url: '', secret: '' } },
+  proxy: { http: '', https: '' },
+  safety: { max_file_size: 10, max_threads: 4 },
+  pt: {} as Record<string, { cookie: string; ua: string }>,
 })
 
 function getPtValue(short: string, field: string) {
@@ -197,56 +168,44 @@ function getPtValue(short: string, field: string) {
 }
 
 function setPtValue(short: string, field: string, value: string) {
-  if (!(forms.pt as any)[short]) (forms.pt as any)[short] = {}
+  if (!(forms.pt as any)[short]) {
+    ;(forms.pt as any)[short] = { cookie: '', ua: '' }
+  }
   ;(forms.pt as any)[short][field] = value
 }
 
-async function load() {
-  try {
-    const settings = await getSettings()
-    const s = settings as any
-    if (s.pt) Object.assign(forms.pt, s.pt)
-    if (s.qb) Object.assign(forms.qb, s.qb)
-    if (s.emby) Object.assign(forms.emby, s.emby)
-    if (s.telegram) Object.assign(forms.telegram, s.telegram)
-    if (s.discord) Object.assign(forms.discord, s.discord)
-    if (s.proxy) Object.assign(forms.proxy, s.proxy)
-    if (s.limits) Object.assign(forms.limits, s.limits)
-  } catch {}
-}
-
-async function save() {
+async function handleSave() {
   saving.value = true
   try {
-    await saveAllSettings({
-      pt: JSON.stringify(forms.pt),
-      qb_host: forms.qb.host,
-      qb_port: String(forms.qb.port),
-      qb_username: forms.qb.username,
-      qb_password: forms.qb.password,
-      emby_host: forms.emby.host,
-      emby_api_key: forms.emby.api_key,
-      telegram_bot_token: forms.telegram.bot_token,
-      telegram_chat_id: forms.telegram.chat_id,
-      discord_webhook_url: forms.discord.webhook_url,
-      http_proxy: forms.proxy.http_proxy,
-      daily_limit: String(forms.limits.daily_limit),
-      concurrent: String(forms.limits.concurrent),
-      disk_threshold: String(forms.limits.disk_threshold),
-      max_file_size: String(forms.limits.max_file_size),
-      max_seeds: String(forms.limits.max_seeds),
-    })
-    message.success('设置已保存')
-  } catch {
-    message.error('保存失败')
+    await api.post('/api/settings', forms)
+    message.success('配置已保存')
+  } catch (err: any) {
+    message.error(err.response?.data?.detail || '保存失败')
   } finally {
     saving.value = false
   }
 }
 
+async function load() {
+  try {
+    const res = await api.get('/api/settings')
+    const data = res.data
+    if (data.downloader?.qbittorrent) Object.assign(forms.downloader.qbittorrent, data.downloader.qbittorrent)
+    if (data.media) {
+      if (data.media.jellyfin) Object.assign(forms.media.jellyfin, data.media.jellyfin)
+      if (data.media.emby) Object.assign(forms.media.emby, data.media.emby)
+    }
+    if (data.notify) {
+      if (data.notify.telegram) Object.assign(forms.notify.telegram, data.notify.telegram)
+      if (data.notify.webhook) Object.assign(forms.notify.webhook, data.notify.webhook)
+    }
+    if (data.proxy) Object.assign(forms.proxy, data.proxy)
+    if (data.safety) Object.assign(forms.safety, data.safety)
+    if (data.pt) forms.pt = data.pt
+  } catch (err) {
+    console.error('Failed to load settings:', err)
+  }
+}
+
 onMounted(load)
 </script>
-
-<style scoped>
-.settings-page { max-width: 960px; }
-</style>

@@ -1,88 +1,106 @@
 <template>
   <div class="search-page">
-    <n-page-header title="搜索" subtitle="PT 站点资源搜索" style="margin-bottom: 24px;">
-      <template #extra>
-        <n-button @click="loadSites" size="small">🔄 刷新站点</n-button>
-      </template>
-    </n-page-header>
+    <div class="page-header">
+      <h2>PT 搜索</h2>
+      <p>在 PT 站点搜索资源</p>
+    </div>
 
-    <n-card :bordered="false" embedded style="margin-bottom: 16px;">
-      <n-form inline :model="searchForm" @submit.prevent="doSearch">
-        <n-form-item label="番号">
-          <n-input v-model:value="searchForm.keyword" placeholder="番号 / 演员名 / 关键词" @keyup.enter="doSearch" style="width: 240px;" />
-        </n-form-item>
-        <n-form-item label="演员">
-          <n-input v-model:value="searchForm.actor" placeholder="可选过滤" style="width: 160px;" />
-        </n-form-item>
-        <n-form-item>
-          <n-button type="primary" html-type="submit" :loading="loading">
-            {{ loading ? '搜索中...' : '🔍 搜索' }}
-          </n-button>
-        </n-form-item>
-      </n-form>
-    </n-card>
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="display: flex; gap: 8px;">
+        <n-input
+          v-model:value="keyword"
+          placeholder="搜索关键词..."
+          size="medium"
+          @keydown.enter="doSearch"
+          style="flex: 1;"
+        />
+        <n-select
+          v-model:value="selectedSite"
+          :options="siteOptions"
+          placeholder="站点"
+          size="medium"
+          clearable
+          style="width: 200px;"
+        />
+        <button class="btn btn-primary" @click="doSearch">🔎 搜索</button>
+      </div>
+    </div>
 
-    <n-alert v-if="errorMsg" type="error" :show-icon="false" style="margin-bottom: 16px;">
-      {{ errorMsg }}
-    </n-alert>
-
-    <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen">
-      <n-grid-item v-for="r in results" :key="r.torrent_url">
-        <n-card :bordered="false" embedded hoverable>
-          <n-space vertical>
-            <n-image v-if="r.cover" :src="r.cover" object-fit="cover" style="width: 100%; height: 180px; border-radius: 8px;" />
-            <div v-else style="width: 100%; height: 180px; background: #161b22; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">🎬</div>
-            <n-text strong>{{ r.title_cn || r.title }}</n-text>
-            <n-text depth="3" v-if="r.title_cn" style="font-size: 12px;">{{ r.title }}</n-text>
-            <n-space>
-              <n-tag size="small" round>{{ r.site }}</n-tag>
-              <n-tag v-if="r.size" size="small" round>{{ r.size }}</n-tag>
-              <n-tag size="small" round type="success">🟢 {{ r.seeders }}</n-tag>
-            </n-space>
-            <n-text depth="3" v-if="r.actors && r.actors.length" style="font-size: 12px;">
-              {{ r.actors.slice(0, 3).join(' / ') }}
-            </n-text>
-          </n-space>
-        </n-card>
-      </n-grid-item>
-    </n-grid>
-
-    <n-empty v-if="results.length === 0 && !loading && !errorMsg" description="输入番号搜索资源" style="margin-top: 40px;" />
+    <div class="card">
+      <table v-if="results.length > 0">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>站点</th>
+            <th>大小</th>
+            <th>种子</th>
+            <th>做种</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="r in results" :key="r.title">
+            <td style="color: var(--text-primary);">{{ r.title }}</td>
+            <td><span class="badge badge-muted">{{ r.site }}</span></td>
+            <td>{{ r.size }}</td>
+            <td>{{ r.seeders }}</td>
+            <td>{{ r.leechers }}</td>
+            <td>
+              <button class="btn btn-sm" @click="downloadTorrent(r)">📥 下载</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">
+        <div class="empty-state-icon">🔎</div>
+        <div class="empty-state-text">输入关键词开始搜索</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { searchPT, getPTSitesConfig } from '../api'
+import { NSelect } from 'naive-ui'
+import { api } from '@/api'
 
-const searchForm = ref({ keyword: '', actor: '' })
+const keyword = ref('')
+const selectedSite = ref('')
 const results = ref<any[]>([])
-const loading = ref(false)
-const errorMsg = ref('')
-const sites = ref<any[]>([])
+const siteOptions = ref<any[]>([])
 
 async function loadSites() {
   try {
-    sites.value = await getPTSitesConfig()
-  } catch {}
+    const res = await api.get('/api/sites')
+    siteOptions.value = (res.data || []).map((s: any) => ({
+      label: s.name,
+      value: s.short,
+    }))
+  } catch {
+    // ignore
+  }
 }
 
 async function doSearch() {
-  if (!searchForm.value.keyword.trim()) return
-  loading.value = true
-  errorMsg.value = ''
+  if (!keyword.value) return
   try {
-    results.value = await searchPT(searchForm.value.keyword, searchForm.value.actor)
-  } catch (e: any) {
-    errorMsg.value = e.message || '搜索失败'
-  } finally {
-    loading.value = false
+    const params: any = { q: keyword.value }
+    if (selectedSite.value) params.site = selectedSite.value
+    const res = await api.get('/api/search', { params })
+    results.value = res.data || []
+  } catch (e) {
+    console.error(e)
+    results.value = []
+  }
+}
+
+async function downloadTorrent(item: any) {
+  try {
+    await api.post('/api/download', { url: item.download_url })
+  } catch (e) {
+    console.error(e)
   }
 }
 
 onMounted(loadSites)
 </script>
-
-<style scoped>
-.search-page { max-width: 960px; }
-</style>

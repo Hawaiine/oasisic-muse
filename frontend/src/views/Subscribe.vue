@@ -1,118 +1,95 @@
 <template>
   <div class="subscribe-page">
-    <n-page-header title="订阅管理" subtitle="管理自动搜索与下载任务" style="margin-bottom: 24px;">
-      <template #extra>
-        <n-button @click="load" size="small">🔄 刷新</n-button>
-      </template>
-    </n-page-header>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h2>订阅管理</h2>
+        <p>管理自动搜索与下载任务</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-primary btn-sm" @click="addTask">➕ 新建任务</button>
+        <button class="btn btn-sm" @click="load">🔄 刷新</button>
+      </div>
+    </div>
 
-    <n-card :bordered="false" embedded style="margin-bottom: 16px;">
-      <n-form inline :model="newSub" @submit.prevent="add">
-        <n-form-item label="关键词">
-          <n-input v-model:value="newSub.keyword" placeholder="番号或关键词" @keyup.enter="add" style="width: 240px;" />
-        </n-form-item>
-        <n-form-item label="演员">
-          <n-input v-model:value="newSub.actor" placeholder="可选" style="width: 160px;" />
-        </n-form-item>
-        <n-form-item>
-          <n-button type="primary" html-type="submit">➕ 添加订阅</n-button>
-        </n-form-item>
-      </n-form>
-    </n-card>
-
-    <n-card :bordered="false" embedded>
-      <n-data-table
-        :columns="columns"
-        :data="subscribes"
-        :bordered="false"
-        :striped="true"
-        :pagination="{ pageSize: 10 }"
-        size="small"
-      />
-    </n-card>
+    <div class="card">
+      <table v-if="tasks.length > 0">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>关键词</th>
+            <th>规则</th>
+            <th>频率</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="t in tasks" :key="t.id">
+            <td style="color: var(--text-primary);">{{ t.name }}</td>
+            <td>{{ t.keywords }}</td>
+            <td>{{ t.rules || '-' }}</td>
+            <td>{{ t.interval }}</td>
+            <td><span :class="['badge', t.enabled ? 'badge-success' : 'badge-muted']">{{ t.enabled ? '启用' : '停用' }}</span></td>
+            <td>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-sm btn-icon" @click="toggleTask(t)">
+                  {{ t.enabled ? '⏸' : '▶' }}
+                </button>
+                <button class="btn btn-sm btn-icon" @click="deleteTask(t.id)">🗑</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">暂无订阅任务</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
-import type { DataTableColumns } from 'naive-ui'
-import { useMessage } from 'naive-ui'
-import { getSubscribes, createSubscribe, toggleSubscribe, deleteSubscribe } from '../api'
+import { ref, onMounted } from 'vue'
+import { api } from '@/api'
 
-const message = useMessage()
-const subscribes = ref<any[]>([])
-const newSub = ref({ keyword: '', actor: '' })
+interface Task {
+  id: string
+  name: string
+  keywords: string
+  rules: string
+  interval: string
+  enabled: boolean
+}
 
-const columns: DataTableColumns<any> = [
-  { title: '关键词', key: 'keyword', ellipsis: { tooltip: true } },
-  { title: '演员', key: 'actor', ellipsis: { tooltip: true } },
-  {
-    title: '状态',
-    key: 'enabled',
-    width: 80,
-    render(row) {
-      return h('n-tag', { type: row.enabled ? 'success' : 'default', size: 'small', round: true }, () => row.enabled ? '启用' : '禁用')
-    },
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 120,
-    render(row) {
-      return h('div', { style: 'display: flex; gap: 4px;' }, [
-        h('n-button', {
-          size: 'small',
-          quaternary: true,
-          type: row.enabled ? 'warning' : 'success',
-          onClick: () => toggle(row.id),
-        }, () => row.enabled ? '禁用' : '启用'),
-        h('n-button', {
-          size: 'small',
-          quaternary: true,
-          type: 'error',
-          onClick: () => remove(row.id),
-        }, () => '删除'),
-      ])
-    },
-  },
-]
+const tasks = ref<Task[]>([])
 
 async function load() {
   try {
-    subscribes.value = await getSubscribes()
-  } catch {}
-}
-
-async function add() {
-  if (!newSub.value.keyword.trim()) return
-  try {
-    await createSubscribe(newSub.value.keyword, newSub.value.actor)
-    newSub.value = { keyword: '', actor: '' }
-    message.success('添加成功')
-    await load()
-  } catch {
-    message.error('添加失败')
+    const res = await api.get('/api/subscriptions')
+    tasks.value = res.data || []
+  } catch (e) {
+    tasks.value = []
   }
 }
 
-async function toggle(id: number) {
-  try {
-    await toggleSubscribe(id)
-    await load()
-  } catch {}
+async function addTask() {
+  // Placeholder for now
+  console.log('add task')
 }
 
-async function remove(id: number) {
+function toggleTask(t: Task) {
+  t.enabled = !t.enabled
+}
+
+async function deleteTask(id: string) {
   try {
-    await deleteSubscribe(id)
-    message.success('已删除')
-    await load()
-  } catch {}
+    await api.delete(`/api/subscriptions/${id}`)
+    load()
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 onMounted(load)
 </script>
-
-<style scoped>
-.subscribe-page { max-width: 960px; }
-</style>

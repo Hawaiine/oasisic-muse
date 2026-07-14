@@ -3,46 +3,56 @@
     <n-message-provider>
       <n-notification-provider>
         <div class="app-root">
-          <!-- 侧栏 -->
-          <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
-            <div class="sidebar-header">
-              <svg class="logo" viewBox="0 0 32 32" width="24" height="24">
-                <circle cx="16" cy="16" r="14" fill="none" stroke="#1d9bf0" stroke-width="1.5" opacity="0.4"/>
-                <path d="M10 18 Q16 8 22 18" fill="none" stroke="#1d9bf0" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="16" cy="12" r="3" fill="#1d9bf0"/>
-              </svg>
-              <span class="brand" v-show="!sidebarCollapsed">Muse</span>
+          <!-- Sidebar -->
+          <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+            <div class="sidebar-brand">
+              <span class="brand-icon">🌊</span>
+              <span class="brand-text" v-show="!isCollapsed">Oasisic Muse</span>
             </div>
 
             <nav class="sidebar-nav">
               <div
-                v-for="item in menuItems"
-                :key="item.key"
+                v-for="item in navItems"
+                :key="item.path"
                 class="nav-item"
-                :class="{ active: currentRoute === item.key }"
-                @click="go(item.key)"
+                :class="{ active: currentRoute === item.path }"
+                @click="navigateTo(item.path)"
               >
                 <span class="nav-icon">{{ item.icon }}</span>
-                <span class="nav-label" v-show="!sidebarCollapsed">{{ item.label }}</span>
+                <span class="nav-label" v-show="!isCollapsed">{{ item.label }}</span>
               </div>
             </nav>
 
             <div class="sidebar-footer">
-              <n-tag size="tiny" round :type="online ? 'success' : 'error'" v-show="!sidebarCollapsed">
-                {{ online ? '在线' : '离线' }}
-              </n-tag>
-              <n-button quaternary circle size="tiny" @click="sidebarCollapsed = !sidebarCollapsed" v-show="sidebarCollapsed">
-                ▶
-              </n-button>
+              <div class="collapse-btn" @click="isCollapsed = !isCollapsed">
+                {{ isCollapsed ? '→' : '←' }}
+              </div>
             </div>
           </aside>
 
-          <!-- 主内容区 -->
-          <main class="main-area">
-            <div class="main-inner">
+          <!-- Main content -->
+          <div class="main-content">
+            <header class="top-bar">
+              <div class="top-bar-left">
+                <button class="menu-toggle" @click="isCollapsed = !isCollapsed">☰</button>
+                <h1 class="page-title">{{ currentPageTitle }}</h1>
+              </div>
+              <div class="top-bar-right">
+                <n-tag type="success" round size="small" v-if="connectionStatus === 'connected'" class="status-badge">
+                  ● 已连接
+                </n-tag>
+                <n-tag type="warning" round size="small" v-else-if="connectionStatus === 'connecting'" class="status-badge">
+                  ◌ 连接中
+                </n-tag>
+                <n-tag type="error" round size="small" v-else class="status-badge">
+                  ○ 离线
+                </n-tag>
+              </div>
+            </header>
+            <main class="content-area">
               <router-view />
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </n-notification-provider>
     </n-message-provider>
@@ -50,97 +60,87 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { darkTheme } from 'naive-ui'
-import { themeOverrides } from './theme'
-import { healthCheck } from './api'
+import { useMessage } from 'naive-ui'
 
 const router = useRouter()
 const route = useRoute()
-const sidebarCollapsed = ref(false)
-const online = ref(false)
+const message = useMessage()
 
+const isCollapsed = ref(false)
 const currentRoute = computed(() => route.path)
 
-const menuItems = [
-  { label: '总览', key: '/dashboard', icon: '📊' },
-  { label: '订阅', key: '/subscribe', icon: '📋' },
-  { label: '下载', key: '/downloads', icon: '⬇️' },
-  { label: '媒体库', key: '/library', icon: '🎬' },
-  { label: '搜索', key: '/search', icon: '🔍' },
-  { label: '设置', key: '/settings', icon: '⚙️' },
-  { label: '关于', key: '/about', icon: 'ℹ️' },
+const navItems = [
+  { path: '/', icon: '📊', label: '总览' },
+  { path: '/subscribe', icon: '🔍', label: '订阅' },
+  { path: '/downloads', icon: '📥', label: '下载' },
+  { path: '/library', icon: '📚', label: '媒体库' },
+  { path: '/search', icon: '🔎', label: '搜索' },
+  { path: '/settings', icon: '⚙️', label: '设置' },
+  { path: '/about', icon: 'ℹ️', label: '关于' },
 ]
 
-function go(path: string) {
+const currentPageTitle = computed(() => {
+  const item = navItems.find(n => n.path === route.path)
+  return item?.label || 'Oasisic Muse'
+})
+
+const connectionStatus = ref<'connected' | 'connecting' | 'offline'>('offline')
+
+function navigateTo(path: string) {
   router.push(path)
 }
-
-async function checkOnline() {
-  try {
-    await healthCheck()
-    online.value = true
-  } catch {
-    online.value = false
-  }
-}
-
-onMounted(checkOnline)
 </script>
 
 <style>
-/* ========== 全局 ========== */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* Import design system */
+@import './assets/design-system.css';
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
-  background: #0b0e14;
-  color: #c9d1d9;
-  -webkit-font-smoothing: antialiased;
-}
-
-#app { min-height: 100vh; }
-
-/* ========== 整体布局 ========== */
+/* ── Root layout ─────────────────────────── */
 .app-root {
   display: flex;
   min-height: 100vh;
 }
 
-/* ========== 侧栏 ========== */
+/* ── Sidebar ─────────────────────────────── */
 .sidebar {
   width: 224px;
-  background: #0d1117;
-  border-right: 1px solid #161b22;
+  min-height: 100vh;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
   display: flex;
   flex-direction: column;
+  transition: width 0.2s ease-out;
+  flex-shrink: 0;
   position: sticky;
   top: 0;
   height: 100vh;
-  flex-shrink: 0;
-  transition: width 0.2s ease;
-  z-index: 100;
+}
+.sidebar.collapsed {
+  width: 64px;
 }
 
-.sidebar.collapsed { width: 64px; }
-
-.sidebar-header {
-  padding: 20px 16px;
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #161b22;
-  min-height: 64px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  height: 56px;
 }
-
-.logo { flex-shrink: 0; }
-
-.brand {
-  font-size: 17px;
-  font-weight: 700;
+.brand-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.brand-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
-  color: #e6edf3;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .sidebar-nav {
@@ -154,77 +154,172 @@ body {
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.15s ease;
-  color: #8b949e;
+  color: var(--text-secondary);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
   margin-bottom: 2px;
 }
-
 .nav-item:hover {
-  background: #161b22;
-  color: #e6edf3;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
-
 .nav-item.active {
-  background: rgba(29, 155, 240, 0.12);
-  color: #58a6ff;
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-weight: 500;
 }
-
 .nav-item.active .nav-icon {
-  filter: none;
+  opacity: 1;
 }
-
-.nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-.nav-label { white-space: nowrap; overflow: hidden; }
+.nav-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .sidebar-footer {
-  padding: 12px 8px;
-  border-top: 1px solid #161b22;
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px;
+}
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  transition: all 0.15s ease-out;
+}
+.collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Main content ────────────────────────── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-page);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
-
-/* ========== 主内容 ========== */
-.main-area {
-  flex: 1;
-  min-width: 0;
-  background: #0b0e14;
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-
-.main-inner {
-  max-width: 1024px;
-  padding: 32px 40px 64px;
+.menu-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease-out;
 }
-
-/* ========== 滚动条 ========== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #161b22; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #21262d; }
-
-/* ========== 全局表单美化 ========== */
-.n-input .n-input-wrapper,
-.n-input-number .n-input-number-group,
-.n-select .n-base-selection,
-.n-switch .n-switch__rail {
-  border-radius: 8px !important;
+.menu-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
-
-/* ========== 页面标题 ========== */
 .page-title {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  margin-bottom: 24px;
-  color: #e6edf3;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ========== 卡片 ========== */
-.n-card {
-  border-radius: 12px !important;
+.status-badge {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.content-area {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* ── Page header ─────────────────────────── */
+.page-header {
+  margin-bottom: 24px;
+}
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.page-header p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ── Grid ────────────────────────────────── */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ── Fade animation ──────────────────────── */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 100;
+    transform: translateX(-100%);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  .content-area {
+    padding: 16px;
+  }
 }
 </style>

@@ -1,0 +1,304 @@
+/* ============================================
+   Oasisic Muse — Design System (Supabase/Sentry inspired)
+   Colors: near-black surfaces, emerald green accent
+   Font: Inter (Google Fonts)
+   ============================================ */
+
+/* ── Font import ─────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── CSS Custom Properties ───────────────── */
+:root {
+  /* Backgrounds */
+  --bg-page: #171717;
+  --bg-surface: #0f0f0f;
+  --bg-elevated: #1e1e1e;
+  --bg-hover: #262626;
+  --bg-active: #2e2e2e;
+
+  /* Text */
+  --text-primary: #fafafa;
+  --text-secondary: #b4b4b4;
+  --text-muted: #898989;
+  --text-tertiary: #6b6b6b;
+
+  /* Brand accent (Supabase green) */
+  --accent: #3ecf8e;
+  --accent-hover: #00c573;
+  --accent-muted: rgba(62, 207, 142, 0.12);
+  --accent-border: rgba(62, 207, 142, 0.3);
+
+  /* Borders */
+  --border-subtle: #242424;
+  --border-default: #2e2e2e;
+  --border-prominent: #363636;
+  --border-light: #393939;
+
+  /* Semantic */
+  --status-online: #3ecf8e;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-offline: #6b6b6b;
+
+  /* Spacing */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* Shadows — none in dark mode, use borders */
+}
+
+/* ── Global reset ────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ── Scrollbar ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-prominent);
+}
+
+/* ── Selection ───────────────────────────── */
+::selection {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+/* ── Links ───────────────────────────────── */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease-out;
+}
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* ── Table ───────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+th {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-surface);
+  position: sticky;
+  top: 0;
+}
+td {
+  color: var(--text-secondary);
+}
+tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* ── Input ───────────────────────────────── */
+input, textarea, select {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  width: 100%;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ── Button base ─────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-prominent);
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.btn-sm {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+.btn-icon {
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+}
+
+/* ── Badge / Tag ─────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.badge-success { background: var(--accent-muted); color: var(--accent); border: 1px solid var(--accent-border); }
+.badge-warning { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-error { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-muted { background: rgba(107, 107, 107, 0.12); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+
+/* ── Card ────────────────────────────────── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.card-embedded {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* ── Stat card ───────────────────────────── */
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s ease-out;
+}
+.stat-card:hover {
+  border-color: var(--border-prominent);
+}
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ── Empty state ─────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.empty-state-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.empty-state-text {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* ── Loading spinner ─────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Reduced motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

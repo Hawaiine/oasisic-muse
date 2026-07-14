@@ -1,57 +1,78 @@
 <template>
   <div class="library-page">
-    <n-page-header title="媒体库" subtitle="Jellyfin / EMBY 媒体管理" style="margin-bottom: 24px;">
-      <template #extra>
-        <n-button @click="load" size="small">🔄 刷新</n-button>
-      </template>
-    </n-page-header>
+    <div class="page-header">
+      <h2>媒体库</h2>
+      <p>Jellyfin / EMBY 媒体管理</p>
+    </div>
 
-    <n-card :bordered="false" embedded style="margin-bottom: 16px;">
-      <n-alert :type="status.connected ? 'success' : 'error'" :show-icon="false">
-        {{ status.connected
-          ? `${status.server_name} (v${status.version}) — 已连接 ✅`
-          : '未连接 — 请在设置中配置 EMBY/Jellyfin 地址'
-        }}
-      </n-alert>
-    </n-card>
+    <div class="grid grid-cols-2">
+      <div class="card">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">Jellyfin</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          {{ jellyfinConfig?.url ? '已配置' : '未配置' }}
+        </div>
+        <button class="btn btn-sm" @click="refreshLibrary('jellyfin')">🔄 刷新</button>
+      </div>
+      <div class="card">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">Emby</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          {{ embyConfig?.url ? '已配置' : '未配置' }}
+        </div>
+        <button class="btn btn-sm" @click="refreshLibrary('emby')">🔄 刷新</button>
+      </div>
+    </div>
 
-    <n-card title="最近添加" :bordered="false" embedded>
-      <n-empty v-if="items.length === 0" description="暂无媒体记录" />
-      <n-grid v-else :cols="4" :x-gap="14" :y-gap="14" responsive="screen">
-        <n-grid-item v-for="item in items" :key="item.id">
-          <n-card :bordered="false" embedded hoverable>
-            <n-space vertical>
-              <n-image v-if="item.poster" :src="item.poster" object-fit="cover" style="width: 100%; height: 160px; border-radius: 8px;" />
-              <n-text strong style="font-size: 13px;">{{ item.title }}</n-text>
-              <n-tag size="small" round>{{ item.type }}</n-tag>
-            </n-space>
-          </n-card>
-        </n-grid-item>
-      </n-grid>
-    </n-card>
+    <div class="card" style="margin-top: 16px;">
+      <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">媒体列表</div>
+      <table v-if="items.length > 0">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>类型</th>
+            <th>年份</th>
+            <th>评分</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in items" :key="item.id">
+            <td style="color: var(--text-primary);">{{ item.name }}</td>
+            <td>{{ item.type }}</td>
+            <td>{{ item.year }}</td>
+            <td>⭐ {{ item.rating }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <div class="empty-state-text">暂无媒体数据</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getLibraryStatus, getRecentMedia } from '../api'
+import { api } from '@/api'
 
-const status = ref({ connected: false, server_name: '', version: '' })
+const jellyfinConfig = ref<any>(null)
+const embyConfig = ref<any>(null)
 const items = ref<any[]>([])
 
-async function load() {
+async function refreshLibrary(source: string) {
   try {
-    const s = await getLibraryStatus()
-    status.value = s as any
-  } catch {}
-  try {
-    items.value = await getRecentMedia()
-  } catch {}
+    await api.post(`/api/library/refresh?source=${source}`)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-onMounted(load)
+onMounted(async () => {
+  try {
+    const res = await api.get('/api/settings')
+    jellyfinConfig.value = res.data.media?.jellyfin
+    embyConfig.value = res.data.media?.emby
+  } catch {
+    // ignore
+  }
+})
 </script>
-
-<style scoped>
-.library-page { max-width: 960px; }
-</style>

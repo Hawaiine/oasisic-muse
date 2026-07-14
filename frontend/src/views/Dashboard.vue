@@ -1,190 +1,145 @@
 <template>
   <div class="dashboard">
-    <n-page-header title="总览" subtitle="Oasisic Muse 系统概览" style="margin-bottom: 24px;">
-      <template #extra>
-        <n-space>
-          <n-tag type="info" round>
-            v{{ version }}
-          </n-tag>
-          <n-button @click="load" size="small">
-            🔄 刷新
-          </n-button>
-        </n-space>
-      </template>
-    </n-page-header>
+    <!-- Stats row -->
+    <div class="grid grid-cols-4" style="margin-bottom: 24px;">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--accent-muted); color: var(--accent);">📡</div>
+        <div>
+          <div class="stat-value">{{ stats.connected ? '●' : '○' }}</div>
+          <div class="stat-label">{{ stats.connected ? '已连接' : '未连接' }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">📥</div>
+        <div>
+          <div class="stat-value">{{ stats.downloads }}</div>
+          <div class="stat-label">下载任务</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.12); color: #a855f7;">📚</div>
+        <div>
+          <div class="stat-value">{{ stats.library }}</div>
+          <div class="stat-label">媒体总数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">🔔</div>
+        <div>
+          <div class="stat-value">{{ stats.notifications }}</div>
+          <div class="stat-label">今日通知</div>
+        </div>
+      </div>
+    </div>
 
-    <!-- 统计卡片 -->
-    <n-grid :cols="4" :x-gap="16" :y-gap="16" responsive="screen">
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <n-statistic label="订阅数" :value="subCount">
-            <template #prefix>
-              <n-icon :component="BookOutline" size="18" />
-            </template>
-          </n-statistic>
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <n-statistic label="下载中" :value="dlCount">
-            <template #prefix>
-              <n-icon :component="DownloadOutline" size="18" />
-            </template>
-          </n-statistic>
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <n-statistic label="种子数" :value="seederCount">
-            <template #prefix>
-              <n-icon :component="TrendingUpOutline" size="18" />
-            </template>
-          </n-statistic>
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded>
-          <n-statistic label="状态">
-            <template #default>
-              <n-tag :type="online ? 'success' : 'error'" round size="small">
-                {{ online ? '在线' : '离线' }}
-              </n-tag>
-            </template>
-            <template #prefix>
-              <n-icon :component="WifiOutline" size="18" />
-            </template>
-          </n-statistic>
-        </n-card>
-      </n-grid-item>
-    </n-grid>
+    <!-- Quick actions -->
+    <div class="grid grid-cols-3" style="margin-bottom: 24px;">
+      <div class="card" style="cursor: pointer;" @click="$router.push('/subscribe')">
+        <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary);">添加订阅</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">管理自动搜索与下载任务</div>
+      </div>
+      <div class="card" style="cursor: pointer;" @click="$router.push('/settings')">
+        <div style="font-size: 24px; margin-bottom: 8px;">⚙️</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary);">系统设置</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">配置下载器、媒体库、通知</div>
+      </div>
+      <div class="card" style="cursor: pointer;" @click="$router.push('/search')">
+        <div style="font-size: 24px; margin-bottom: 8px;">🔎</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary);">PT 搜索</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">搜索 PT 站点资源</div>
+      </div>
+    </div>
 
-    <!-- 快捷入口 -->
-    <n-grid :cols="3" :x-gap="16" :y-gap="16" responsive="screen" style="margin-top: 16px;">
-      <n-grid-item>
-        <n-card :bordered="false" embedded hoverable>
-          <template #header>
-            <n-space>
-              <n-icon :component="SearchOutline" size="18" />
-              <n-text strong>快速搜索</n-text>
-            </n-space>
-          </template>
-          <n-text depth="3" style="font-size: 13px;">输入番号搜索 PT 资源</n-text>
-          <template #footer>
-            <n-button text type="primary" size="small" @click="$router.push('/search')">
-              去搜索 →
-            </n-button>
-          </template>
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded hoverable>
-          <template #header>
-            <n-space>
-              <n-icon :component="AddOutline" size="18" />
-              <n-text strong>新建订阅</n-text>
-            </n-space>
-          </template>
-          <n-text depth="3" style="font-size: 13px;">添加关键词自动搜索下载</n-text>
-          <template #footer>
-            <n-button text type="primary" size="small" @click="$router.push('/subscribe')">
-              去订阅 →
-            </n-button>
-          </template>
-        </n-card>
-      </n-grid-item>
-      <n-grid-item>
-        <n-card :bordered="false" embedded hoverable>
-          <template #header>
-            <n-space>
-              <n-icon :component="SettingsOutline" size="18" />
-              <n-text strong>系统设置</n-text>
-            </n-space>
-          </template>
-          <n-text depth="3" style="font-size: 13px;">配置 qBittorrent、PT 站点、通知</n-text>
-          <template #footer>
-            <n-button text type="primary" size="small" @click="$router.push('/settings')">
-              去设置 →
-            </n-button>
-          </template>
-        </n-card>
-      </n-grid-item>
-    </n-grid>
-
-    <!-- 最近下载 -->
-    <n-card :bordered="false" embedded style="margin-top: 16px;">
-      <template #header>
-        <n-space>
-          <n-icon :component="ListOutline" size="18" />
-          <n-text strong>最近下载</n-text>
-        </n-space>
-      </template>
-      <n-empty v-if="downloads.length === 0" description="暂无下载记录" />
-      <n-data-table v-else :columns="dlColumns" :data="downloads" :bordered="false" :striped="true" :pagination="false" size="small" />
-    </n-card>
+    <!-- Recent downloads -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary);">最近下载</h3>
+        <button class="btn btn-sm" @click="loadDownloads">刷新</button>
+      </div>
+      <table v-if="downloads.length > 0">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>大小</th>
+            <th>进度</th>
+            <th>速度</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in downloads.slice(0, 5)" :key="d.hash">
+            <td style="color: var(--text-primary);">{{ d.name }}</td>
+            <td>{{ d.size }}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; height: 4px; background: var(--bg-hover); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: {{ d.progress }}%; background: var(--accent); border-radius: 2px;"></div>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted);">{{ d.progress }}%</span>
+              </div>
+            </td>
+            <td>{{ d.speed }}</td>
+            <td><span class="badge badge-success">{{ d.state }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-state">
+        <div class="empty-state-icon">📥</div>
+        <div class="empty-state-text">暂无下载任务</div>
+        <button class="btn btn-sm" @click="loadDownloads">刷新</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
-import type { DataTableColumns } from 'naive-ui'
-import { useMessage } from 'naive-ui'
-import {
-  BookOutline, DownloadOutline, TrendingUpOutline, WifiOutline,
-  SearchOutline, AddOutline, SettingsOutline, ListOutline
-} from '@vicons/ionicons5'
-import { getSubscribes, getDownloads, getDownloadStats, healthCheck } from '../api'
+import { ref, onMounted } from 'vue'
+import { api } from '@/api'
 
-const message = useMessage()
-const version = ref('0.3.0')
-const online = ref(false)
-const subCount = ref(0)
-const dlCount = ref(0)
-const seederCount = ref(0)
-const downloads = ref<any[]>([])
+interface DownloadItem {
+  hash: string
+  name: string
+  size: string
+  progress: number
+  speed: string
+  state: string
+}
 
-const dlColumns: DataTableColumns<any> = [
-  { title: '名称', key: 'name', ellipsis: { tooltip: true } },
-  { title: '大小', key: 'size' },
-  { title: '进度', key: 'progress', render(row) {
-    return h('n-progress', {
-      percentage: row.progress || 0,
-      type: 'line',
-      indicator: 'inside',
-      strokeWidth: 6,
-    })
-  }},
-  { title: '状态', key: 'state' },
-]
+const stats = ref({
+  connected: false,
+  downloads: 0,
+  library: 0,
+  notifications: 0,
+})
+
+const downloads = ref<DownloadItem[]>([])
 
 async function load() {
   try {
-    await healthCheck()
-    online.value = true
+    const health = await api.get('/api/health')
+    stats.value.connected = health.data.status === 'ok'
   } catch {
-    online.value = false
+    stats.value.connected = false
   }
+  loadDownloads()
+}
 
+async function loadDownloads() {
   try {
-    const subs = await getSubscribes()
-    subCount.value = (subs as any[]).length
-  } catch {}
-
-  try {
-    const stats = await getDownloadStats()
-    const s = stats as any
-    dlCount.value = s.total || 0
-    seederCount.value = s.seeders || 0
-  } catch {}
-
-  try {
-    downloads.value = await getDownloads()
-  } catch {}
+    const res = await api.get('/api/downloads')
+    downloads.value = (res.data || []).map((d: any) => ({
+      hash: d.hash,
+      name: d.name || '未知',
+      size: d.size || '0 B',
+      progress: Math.round(d.progress || 0),
+      speed: d.speed || '0 B/s',
+      state: d.state || '未知',
+    }))
+  } catch {
+    downloads.value = []
+  }
 }
 
 onMounted(load)
 </script>
-
-<style scoped>
-.dashboard { max-width: 960px; }
-.n-card { border-radius: 12px !important; }
-</style>
