@@ -13,15 +13,13 @@ from fastapi.staticfiles import StaticFiles
 from .config import settings
 from .database import init_db
 from .routers import about, subscribe, download, library, settings as settings_router, notify, search, limits, health
-from .services.subscribe_engine import SubscribeEngine
+from .services.subscribe_engine import engine
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-engine = SubscribeEngine()
 
 
 @asynccontextmanager

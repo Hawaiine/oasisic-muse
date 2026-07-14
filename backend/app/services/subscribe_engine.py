@@ -250,3 +250,7 @@ class SubscribeEngine:
         if self.scheduler.running:
             self.scheduler.shutdown(wait=False)
             logger.info("订阅引擎已停止")
+
+
+# 全局引擎实例
+engine = SubscribeEngine()
