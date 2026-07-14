@@ -1,9 +1,9 @@
-import { ofetch } from 'ofetch'
+import { ofetch, type OfetchInstance } from 'ofetch'
 
 export const api = ofetch.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
-})
+}) as OfetchInstance & ((url: string, options?: any) => Promise<any>)
 
 export async function getAbout() {
   return api('/about')

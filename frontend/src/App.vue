@@ -89,6 +89,25 @@ const currentPageTitle = computed(() => {
 
 const connectionStatus = ref<'connected' | 'connecting' | 'offline'>('offline')
 
+const themeOverrides = {
+  common: {
+    primaryColor: '#3ecf8e',
+    primaryColorHover: '#00c573',
+    primaryColorPressed: '#3ecf8e',
+    primaryColorSuppl: '#3ecf8e',
+    textColorBase: '#fafafa',
+    textColor1: '#fafafa',
+    textColor2: '#b4b4b4',
+    textColor3: '#898989',
+    borderColor: '#2e2e2e',
+    cardColor: '#0f0f0f',
+    bodyColor: '#171717',
+    tagColor: '#2e2e2e',
+    hoverColor: '#262626',
+    borderColor: '#2e2e2e',
+  },
+}
+
 function navigateTo(path: string) {
   router.push(path)
 }
