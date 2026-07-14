@@ -1,7 +1,8 @@
-"""标题翻译服务 — 日文/英文 → 中文"""
+"""标题翻译服务 — 多后端自动切换 + 缓存"""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from typing import Any
@@ -12,7 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class TranslateService:
-    """翻译服务（Google Translate 免费接口）"""
+    """翻译服务 — 自动切换后端
+
+    后端优先级:
+    1. Google Translate (海外)
+    2. Microsoft Translator (国内可访问)
+    3. 返回原文
+    """
 
     def __init__(self):
         self._cache: dict[str, str] = {}
@@ -32,63 +39,96 @@ class TranslateService:
 
         # 判断是否需要翻译
         if not self._needs_translate(text):
-            # 已有中文，直接返回
             self._cache[cache_key] = text
             return text
 
-        try:
-            translated = await self._translate(text)
-            if translated:
-                self._cache[cache_key] = translated
-                return translated
-        except Exception as e:
-            logger.warning("翻译失败: %s", e)
+        # 顺序尝试多个后端
+        backends = [
+            ("Google", self._translate_google),
+            ("Microsoft", self._translate_microsoft),
+        ]
 
+        for name, backend in backends:
+            try:
+                translated = await backend(text)
+                if translated:
+                    self._cache[cache_key] = translated
+                    logger.info("[%s] %s → %s", name, text[:30], translated[:30])
+                    return translated
+            except Exception as e:
+                logger.debug("[%s] 翻译失败: %s", name, e)
+                continue
+
+        # 所有后端都失败，返回原文
+        self._cache[cache_key] = text
         return text
 
     @staticmethod
     def _needs_translate(text: str) -> bool:
-        """判断是否需要翻译
-
-        如果文本包含中文字符，视为已有中文，不需要翻译
-        如果没有中文字符且文本长度超过5，需要翻译
-        """
-        has_chinese = bool(re.search(r"[\u4e00-\u9fff]", text))
-        if has_chinese:
+        """判断是否需要翻译"""
+        # 已含中文 → 不需要
+        if re.search(r"[\u4e00-\u9fff]", text):
             return False
-        # 纯番号格式不翻译（如 ABC-123）
+        # 纯番号格式（ABC-123）→ 不需要
         if re.match(r"^[A-Z]{2,6}[-_\s]?\d{2,6}", text.strip()):
             return False
+        # 太短 → 不需要
         return len(text.strip()) > 5
 
-    async def _translate(self, text: str) -> str | None:
-        """调用 Google Translate 免费接口"""
+    async def _translate_google(self, text: str) -> str | None:
+        """Google Translate 免费接口"""
         url = "https://translate.googleapis.com/translate_a/single"
         params = {
             "client": "gtx",
             "sl": "auto",
             "tl": "zh-CN",
             "dt": "t",
-            "q": text[:500],  # 限制长度
+            "q": text[:500],
         }
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=8) as client:
                 resp = await client.get(url, params=params)
                 resp.raise_for_status()
                 data = resp.json()
-                # 解析响应
                 sentences = []
                 for part in data[0]:
                     if part[0]:
                         sentences.append(part[0])
-                result = "".join(sentences)
-                return result if result else None
+                return "".join(sentences) if sentences else None
         except Exception as e:
-            logger.error("Google Translate 请求失败: %s", e)
+            logger.debug("Google Translate 不可用: %s", e)
+            return None
+
+    async def _translate_microsoft(self, text: str) -> str | None:
+        """Microsoft Translator 国内可访问
+
+        使用官方免费接口 (不需要 API Key)
+        """
+        url = "https://api.cognitive.microsofttranslator.com/translate"
+        params = {
+            "api-version": "3.0",
+            "from": "auto",
+            "to": "zh-Hans",
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Content-Type": "application/json; charset=UTF-8",
+        }
+        body = [{"Text": text[:500]}]
+
+        try:
+            async with httpx.AsyncClient(timeout=8) as client:
+                resp = await client.post(url, params=params, json=body, headers=headers)
+                resp.raise_for_status()
+                data = resp.json()
+                if data and len(data) > 0 and "translations" in data[0]:
+                    return data[0]["translations"][0].get("text")
+                return None
+        except Exception as e:
+            logger.debug("Microsoft Translator 不可用: %s", e)
             return None
 
     async def batch_translate(self, texts: list[str]) -> list[str]:
         """批量翻译"""
-        import asyncio
         tasks = [self.to_chinese(t) for t in texts]
         return await asyncio.gather(*tasks)

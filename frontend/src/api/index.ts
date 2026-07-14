@@ -86,3 +86,7 @@ export async function refreshLibrary() {
 export async function runEngineNow() {
   return api('/limits/run-now', { method: 'POST' })
 }
+
+export async function lookupMovie(movieId: string) {
+  return api('/search/lookup', { params: { movie_id: movieId } })
+}
