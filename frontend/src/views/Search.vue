@@ -96,7 +96,7 @@ async function doSearch() {
 
 async function downloadTorrent(item: any) {
   try {
-    await api('/api/download', { url: item.download_url })
+    await api('/api/download', { method: 'POST', body: { url: item.download_url } })
   } catch (e) {
     console.error(e)
   }
