@@ -127,7 +127,9 @@ class ConnectivityCheck:
                 "name": "qBittorrent",
                 "status": "online" if result.get("connected") else "offline",
                 "version": result.get("version", ""),
-                "error": result.get("error", ""),
+                "error_type": result.get("error_type", ""),
+                "error_message": result.get("error_message", ""),
+                "detail": result.get("detail"),
             }
         except Exception as e:
             return {"type": "downloader", "name": "qBittorrent", "status": "offline", "error": str(e)[:50]}
