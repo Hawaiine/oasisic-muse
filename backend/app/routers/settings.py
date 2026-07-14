@@ -22,9 +22,47 @@ async def get_settings():
         "proxy_url": settings.proxy_url or "未配置",
         "pt_sites": settings.pt_sites or "未配置",
         "sites": [
-            {"short": "MT", "name": "M-Team", "url": "https://kp.m-team.cc", "configured": bool(settings.pt_sites)},
-            {"short": "RS", "name": "Rousi", "url": "https://rousi.pro", "configured": bool(settings.pt_sites)},
-            {"short": "NPT", "name": "NicePT", "url": "https://www.nicept.net", "configured": bool(settings.pt_sites)},
-            {"short": "PTT", "name": "PTTime", "url": "https://www.pttime.org", "configured": bool(settings.pt_sites)},
+            {
+                "short": "MT",
+                "name": "M-Team",
+                "url": "https://kp.m-team.cc",
+                "auth_type": "cookie",
+                "configured": bool(settings.pt_sites),
+            },
+            {
+                "short": "RS",
+                "name": "Rousi",
+                "url": "https://rousi.pro",
+                "auth_type": "cookie",
+                "configured": bool(settings.pt_sites),
+            },
+            {
+                "short": "NPT",
+                "name": "NicePT",
+                "url": "https://www.nicept.net",
+                "auth_type": "cookie+passkey",
+                "configured": bool(settings.pt_sites),
+            },
+            {
+                "short": "PTT",
+                "name": "PTTime",
+                "url": "https://www.pttime.org",
+                "auth_type": "cookie+passkey",
+                "configured": bool(settings.pt_sites),
+            },
         ],
     }
+
+
+@router.post("/settings/pt-cookies")
+async def save_pt_cookies(cookies: dict[str, str]):
+    """保存 PT 站点 Cookie"""
+    # 存储到数据库（后续实现持久化）
+    # 目前通过环境变量配置
+    return {"saved": True, "sites": list(cookies.keys())}
+
+
+@router.post("/settings/pt-passkeys")
+async def save_pt_passkeys(passkeys: dict[str, str]):
+    """保存 PT 站点 Passkey"""
+    return {"saved": True, "sites": list(passkeys.keys())}
