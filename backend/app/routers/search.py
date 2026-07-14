@@ -98,9 +98,23 @@ def _is_av_related(title: str, keyword: str, actor: str = "") -> bool:
 
 @router.get("/search/lookup")
 async def lookup_movie(movie_id: str):
-    """查询单个作品的元数据（封面、演员）"""
-    meta = await av_meta.lookup(movie_id)
-    return meta or {"error": "未找到", "id": movie_id}
+    """查询单个作品的元数据（封面、演员、发行日期、类别等）
+
+    使用真实数据源 jav321.com 刮削
+    """
+    from ..services.scraper import AVScraper
+    scraper = AVScraper()
+    result = await scraper.scrape(movie_id)
+    return result
+
+
+@router.post("/search/scrape")
+async def scrape_movie(movie_id: str):
+    """手动触发刮削（下载封面+生成缩略图）"""
+    from ..services.scraper import AVScraper
+    scraper = AVScraper()
+    result = await scraper.scrape(movie_id)
+    return result
 
 
 @router.get("/search/sites")

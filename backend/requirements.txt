@@ -8,3 +8,4 @@ python-multipart>=0.0.18
 beautifulsoup4>=4.12,<5
 lxml>=5.3,<6
 apscheduler>=3.10,<4
+Pillow>=11,<12
