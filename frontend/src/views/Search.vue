@@ -84,9 +84,7 @@ async function doSearch() {
 }
 
 async function download(r: any) {
-  try {
-    await import('../api').then(m => m.downloadTorrent(r.torrent_url, r.save_path))
-  } catch {}
+  // 下载功能需要后端 API 支持
 }
 
 onMounted(loadSites)
